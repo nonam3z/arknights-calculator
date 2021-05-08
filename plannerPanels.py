@@ -1,8 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from tkinter import *
 import ArknightsDataParser
-import PenguinLogisticsParser
 
 
 class Panel(tk.Frame):

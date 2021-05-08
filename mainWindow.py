@@ -19,4 +19,3 @@ class Application(tk.Frame):
         self.tabs = ttk.Notebook(self)
         self.tabs.grid(row=0, column=0, sticky="nsew")
         self.tabs.add(plannerFrame.Planner(self), text="Planner")
-

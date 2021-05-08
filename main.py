@@ -1,7 +1,7 @@
 import mainWindow
 import tkinter as tk
 from tkinter import *
-from urllib.request import urlretrieve
+# from urllib.request import urlretrieve
 
 # def update_database(filename):
 #     repository = "https://raw.githubusercontent.com/Dimbreath/ArknightsData/master/en-US/gamedata/excel/"

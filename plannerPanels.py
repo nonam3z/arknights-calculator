@@ -55,9 +55,9 @@ class Panel(tk.Frame):
         if self.selectLvl["to"] <= int(self.selectLvl.get()):
             self.selectLvl.delete(0, 9)
             self.selectLvl.insert(0, self.selectLvl["to"])
-        self.selectSkill1["to"] = self.ear.skillLvl(self.selectElite.get())
-        self.selectSkill2["to"] = self.ear.skillLvl(self.selectElite.get())
-        self.selectSkill3["to"] = self.ear.skillLvl(self.selectElite.get())
+        self.selectSkill1["to"] = self.ear.skill_lvl(self.selectElite.get())
+        self.selectSkill2["to"] = self.ear.skill_lvl(self.selectElite.get())
+        self.selectSkill3["to"] = self.ear.skill_lvl(self.selectElite.get())
 
     def sync_spinbox1(self):
         if (self.selectSkill2.get() and self.selectSkill3.get()) <= self.selectSkill1.get() <= str(

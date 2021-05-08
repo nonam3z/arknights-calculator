@@ -19,7 +19,7 @@ class Planner(tk.Frame):
 
         self.selectOperator = ttk.Combobox(self)
         self.selectOperator.insert(0, "Nearl")
-        self.selectOperator["values"] = ArknightsDataParser.returnListofEars()
+        self.selectOperator["values"] = ArknightsDataParser.return_list_of_ears()
         self.selectOperator.grid(row=0, columnspan=2, padx=3, pady=(3, 10), sticky="ew")
         self.selectOperator.bind("<<ComboboxSelected>>", self.set_max_lvls)
 
@@ -199,4 +199,3 @@ class Planner(tk.Frame):
             self.desiredStats.selectSkill1.configure(state=NORMAL)
             self.desiredStats.selectSkill2.configure(state=NORMAL)
             self.desiredStats.selectSkill3.configure(state=NORMAL)
-

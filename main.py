@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import *
 # from urllib.request import urlretrieve
 
-# def update_database(filename):
+# def update_database(filename): # just updating data
 #     repository = "https://raw.githubusercontent.com/Dimbreath/ArknightsData/master/en-US/gamedata/excel/"
 #     data = (repository+filename+".json")
 #     file = ("jsons/"+filename+".json")

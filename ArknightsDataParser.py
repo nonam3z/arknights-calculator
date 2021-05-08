@@ -1,18 +1,5 @@
 import json
-from urllib.request import urlretrieve
 
-
-# def update_database(filename):
-#     repository = "https://raw.githubusercontent.com/Dimbreath/ArknightsData/master/en-US/gamedata/excel/"
-#     data = (repository+filename+".json")
-#     file = ("jsons/"+filename+".json")
-#     urlretrieve(data, file)
-#
-#
-# update_database("character_table")
-# update_database("item_table")
-# update_database("building_data")
-# update_database("gamedata_const")
 
 ears = json.load(open("jsons/character_table.json", encoding='utf-8'))
 items = json.load(open("jsons/item_table.json", encoding='utf-8'))

@@ -2,14 +2,15 @@ import json
 from urllib.request import urlretrieve
 import os
 
-os.mkdir("jsons")
+
+os.makedirs("jsons", exist_ok=True)
 
 
 def get_file_from_github(filename):
     repository = "https://raw.githubusercontent.com/Dimbreath/ArknightsData/master/en-US/gamedata/excel/"
     data = (repository+filename+".json")
     file = ("jsons/"+filename+".json")
-    open((filename+".json"), 'w+')
+    open(file, 'w+')
     urlretrieve(data, file)
 
 

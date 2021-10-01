@@ -18,6 +18,9 @@ def update_script():
     get_file_from_github("gamedata_const")
 
 
+# update_script()
+
+
 root = tk.Tk()
 Grid.rowconfigure(root, 0, weight=1)
 Grid.columnconfigure(root, 0, weight=1)

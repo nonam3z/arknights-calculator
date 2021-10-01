@@ -25,15 +25,15 @@ class Panel(tk.Frame):
         self.selectLvl.grid(column=1, row=1, sticky="ew")
         self.selectLvl.insert(0, "1")
 
-        self.selectSkill1 = ttk.Spinbox(self, from_=1, to=10, command=self.sync_spinbox1)
+        self.selectSkill1 = ttk.Spinbox(self, from_=1, to=10, command=lambda:self.sync_spinbox(self.selectSkill1.get()))
         self.selectSkill1.grid(column=1, row=2, sticky="ew")
         self.selectSkill1.insert(0, "1")
 
-        self.selectSkill2 = ttk.Spinbox(self, from_=1, to=10, command=self.sync_spinbox2)
+        self.selectSkill2 = ttk.Spinbox(self, from_=1, to=10, command=lambda:self.sync_spinbox(self.selectSkill2.get()))
         self.selectSkill2.grid(column=1, row=3, sticky="ew")
         self.selectSkill2.insert(0, "1")
 
-        self.selectSkill3 = ttk.Spinbox(self, from_=1, to=10, command=self.sync_spinbox3)
+        self.selectSkill3 = ttk.Spinbox(self, from_=1, to=10, command=lambda:self.sync_spinbox(self.selectSkill3.get()))
         self.selectSkill3.grid(column=1, row=4, sticky="ew")
         self.selectSkill3.insert(0, "1")
 
@@ -59,47 +59,14 @@ class Panel(tk.Frame):
         self.selectSkill2["to"] = self.ear.skill_lvl(self.selectElite.get())
         self.selectSkill3["to"] = self.ear.skill_lvl(self.selectElite.get())
 
-    def sync_spinbox1(self):
-        if (self.selectSkill2.get() and self.selectSkill3.get()) <= self.selectSkill1.get() <= str(
-                7) and self.selectSkill1.get() != str(10):
-            self.selectSkill2.delete(0, 9)
-            self.selectSkill2.insert(0, self.selectSkill1.get())
-            self.selectSkill3.delete(0, 9)
-            self.selectSkill3.insert(0, self.selectSkill1.get())
-        if (self.selectSkill2.get() and self.selectSkill3.get()) >= self.selectSkill1.get() <= str(
-                7) and self.selectSkill1.get() != str(10):
-            self.selectSkill2.delete(0, 9)
-            self.selectSkill2.insert(0, self.selectSkill1.get())
-            self.selectSkill3.delete(0, 9)
-            self.selectSkill3.insert(0, self.selectSkill1.get())
-
-    def sync_spinbox2(self):
-        if (self.selectSkill1.get() and self.selectSkill3.get()) <= self.selectSkill2.get() <= str(
-                7) and self.selectSkill2.get() != str(10):
+    def sync_spinbox(self, sbvalue):
+        if (sbvalue != self.selectSkill1 or sbvalue != self.selectSkill2 or sbvalue != self.selectSkill3) and int(sbvalue) <= 7:
             self.selectSkill1.delete(0, 9)
-            self.selectSkill1.insert(0, self.selectSkill2.get())
-            self.selectSkill3.delete(0, 9)
-            self.selectSkill3.insert(0, self.selectSkill2.get())
-        if (self.selectSkill1.get() and self.selectSkill3.get()) >= self.selectSkill2.get() <= str(
-                7) and self.selectSkill2.get() != str(10):
-            self.selectSkill1.delete(0, 9)
-            self.selectSkill1.insert(0, self.selectSkill2.get())
-            self.selectSkill3.delete(0, 9)
-            self.selectSkill3.insert(0, self.selectSkill2.get())
-
-    def sync_spinbox3(self):
-        if (self.selectSkill1.get() and self.selectSkill2.get()) >= self.selectSkill3.get() <= str(
-                7) and self.selectSkill3.get() != str(10):
-            self.selectSkill1.delete(0, 9)
-            self.selectSkill1.insert(0, self.selectSkill3.get())
+            self.selectSkill1.insert(0, sbvalue)
             self.selectSkill2.delete(0, 9)
-            self.selectSkill2.insert(0, self.selectSkill3.get())
-        if (self.selectSkill1.get() and self.selectSkill2.get()) <= self.selectSkill3.get() <= str(
-                7) and self.selectSkill3.get() != str(10):
-            self.selectSkill1.delete(0, 9)
-            self.selectSkill1.insert(0, self.selectSkill3.get())
-            self.selectSkill2.delete(0, 9)
-            self.selectSkill2.insert(0, self.selectSkill3.get())
+            self.selectSkill2.insert(0, sbvalue)
+            self.selectSkill3.delete(0, 9)
+            self.selectSkill3.insert(0, sbvalue)
 
     def on_reset(self, event):
         self.on_update()

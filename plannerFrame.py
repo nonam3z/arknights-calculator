@@ -3,6 +3,8 @@ from tkinter import ttk
 from tkinter import *
 import plannerPanels
 import ArknightsDataParser
+import win32clipboard
+import json
 
 
 class Planner(tk.Frame):
@@ -81,7 +83,31 @@ class Planner(tk.Frame):
         self.set_max_lvls("")
 
     def calculate_button(self):
-        self.calculate("")
+        results = self.calculate("")
+        penguin_export = {}
+        json_data = {"@type":"@penguin-statistics/planner/config"}
+        items_dict = {}
+        options = {"options":{"byProduct":"false", "requireExp":"true", "requireLmb":"true"}}
+        excludes = ["main_06-14","main_07-01","main_07-02","main_07-03","main_07-04","main_07-05",
+                                  "main_07-06","main_07-07","main_07-08","main_07-09","main_07-10","main_07-11",
+                                  "main_07-12","main_07-13","main_07-14","main_07-15","main_07-16","sub_07-1-1",
+                                  "sub_07-1-2","main_08-01","main_08-02","main_08-03","main_08-04","main_08-05",
+                                  "main_08-06","main_08-07","main_08-08","main_08-09","main_08-10","main_08-11",
+                                  "main_08-12","main_08-13","main_08-14","main_08-15","main_08-16","main_08-17"]
+        excludes_dict = {}
+        items = []
+        for i in results:
+            items.append({'id': i, 'need': results.get(i, 0), 'have':0})
+        items_dict.setdefault("items", items)
+        excludes_dict.setdefault("excludes", excludes)
+        penguin_export.update(json_data)
+        penguin_export.update(items_dict)
+        penguin_export.update(options)
+        penguin_export.update(excludes_dict)
+        win32clipboard.OpenClipboard()
+        win32clipboard.EmptyClipboard()
+        win32clipboard.SetClipboardText(json.dumps(penguin_export))
+        win32clipboard.CloseClipboard()
 
     def calculate(self, event):
         results = {}
@@ -104,7 +130,9 @@ class Planner(tk.Frame):
             self.results.delete(i)
         if results:
             for i in results:
-                self.results.insert("", tk.END, values=(i, results.get(i)))
+                name = ArknightsDataParser.Item(i).name
+                self.results.insert("", tk.END, values=(name, results.get(i)))
+        return results
 
     # (i + " : " + str(results.get(i))
 

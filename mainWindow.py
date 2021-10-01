@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 import plannerFrame
+import inventory
 
 
 class Application(tk.Frame):
@@ -19,3 +20,4 @@ class Application(tk.Frame):
         self.tabs = ttk.Notebook(self)
         self.tabs.grid(row=0, column=0, sticky="nsew")
         self.tabs.add(plannerFrame.Planner(self), text="Planner")
+        self.tabs.add(inventory.InventoryFrame(self), text="Inventory Depot")

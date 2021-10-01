@@ -75,6 +75,13 @@ class Item:
                 self.itemCraftingId = item["buildingProductList"][0]["formulaId"]
                 self.formula = formulas["workshopFormulas"][self.itemCraftingId]
 
+def create_inventory(self):
+    inventory = []
+    for craftingitem in items["items"].values():
+        if craftingitem["classifyType"] == "MATERIAL" and craftingitem["itemType"] == "MATERIAL":
+            inventory[craftingitem] = craftingitem
+    return inventory
+
 
 class OperatorState:
     def __init__(self, iid, name, current, desired):
@@ -120,28 +127,28 @@ def calculate(operator):
                 need_exp += gameconst["characterExpMap"][elite][level]
                 need_money += gameconst["characterUpgradeCostMap"][elite][level]
     if need_exp:
-        results["EXP"] = need_exp
-        results["LMD"] = need_money
+        results["5001"] = need_exp
+        results["4001"] = need_money
     for elite in range(operator.current.elite, operator.desired.elite):
         money_for_elite += gameconst["evolveGoldCost"][ear.rarity][elite]
         for i in return_results(operator.name, elite + 1).items():
             count = results.get(i[0], 0)
             results[i[0]] = count + i[1]
-    results["LMD"] = results.get("LMD", 0) + money_for_elite
-    if results["LMD"] == 0:
-        results.pop("LMD", 0)
+    results["4001"] = results.get("4001", 0) + money_for_elite
+    if results["4001"] == 0:
+        results.pop("4001", 0)
     if operator.current.skill1 < operator.desired.skill1 <= 10:
         if operator.desired.skill1 > 7:
             for i in range(operator.current.skill1-1, 6):
                 skill_lvl_up_cost = ear.ear["allSkillLvlup"][i]["lvlUpCost"]
                 for c in skill_lvl_up_cost:
-                    name = Item(c["id"]).name
+                    name = Item(c["id"]).itemId
                     results[name] = results.get(name, 0) + c["count"]
         else:
             for i in range(operator.current.skill1-1, operator.desired.skill1-1):
                 skill_lvl_up_cost = ear.ear["allSkillLvlup"][i]["lvlUpCost"]
                 for c in skill_lvl_up_cost:
-                    name = Item(c["id"]).name
+                    name = Item(c["id"]).itemId
                     results[name] = results.get(name, 0) + c["count"]
     if operator.current.skill1 < operator.desired.skill1 <= 10 and 7 < operator.desired.skill1:
         cost1 = calculate_skills(operator.name, 0, 0, operator.desired.skill1 - 7)
@@ -169,7 +176,7 @@ def calculate_skills(name, num, current, desired):
     for i in range(current, desired):
         cost = lvl_up_cost[i]["levelUpCost"]
         for c in cost:
-            name = Item(c["id"]).name
+            name = Item(c["id"]).itemId
             results[name] = results.get(name, 0) + c["count"]
     return results
 
@@ -182,5 +189,6 @@ def return_results(name, elite):
         results = {}
         for item in ear.return_elite_cost(elite):
             i = Item(item["id"])
-            results[i.name] = item["count"]
+            results[i.itemId] = item["count"]
         return results
+

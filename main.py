@@ -1,19 +1,22 @@
 import mainWindow
 import tkinter as tk
 from tkinter import *
-# from urllib.request import urlretrieve
+from urllib.request import urlretrieve
 
-# def update_database(filename): # just updating data
-#     repository = "https://raw.githubusercontent.com/Dimbreath/ArknightsData/master/en-US/gamedata/excel/"
-#     data = (repository+filename+".json")
-#     file = ("jsons/"+filename+".json")
-#     urlretrieve(data, file)
-#
-#
-# update_database("character_table")
-# update_database("item_table")
-# update_database("building_data")
-# update_database("gamedata_const")
+
+def get_file_from_github(filename):
+    repository = "https://raw.githubusercontent.com/Dimbreath/ArknightsData/master/en-US/gamedata/excel/"
+    data = (repository+filename+".json")
+    file = ("jsons/"+filename+".json")
+    urlretrieve(data, file)
+
+
+def update_script():
+    get_file_from_github("character_table")
+    get_file_from_github("item_table")
+    get_file_from_github("building_data")
+    get_file_from_github("gamedata_const")
+
 
 root = tk.Tk()
 Grid.rowconfigure(root, 0, weight=1)

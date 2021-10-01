@@ -1,5 +1,27 @@
 import json
+from urllib.request import urlretrieve
+import os
 
+os.mkdir("jsons")
+
+
+def get_file_from_github(filename):
+    repository = "https://raw.githubusercontent.com/Dimbreath/ArknightsData/master/en-US/gamedata/excel/"
+    data = (repository+filename+".json")
+    file = ("jsons/"+filename+".json")
+    open((filename+".json"), 'w+')
+    urlretrieve(data, file)
+
+
+def update_script():
+    get_file_from_github("character_table")
+    get_file_from_github("item_table")
+    get_file_from_github("building_data")
+    get_file_from_github("gamedata_const")
+    get_file_from_github("stage_table")
+
+
+update_script()
 
 ears = json.load(open("jsons/character_table.json", encoding='utf-8'))
 items = json.load(open("jsons/item_table.json", encoding='utf-8'))

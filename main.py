@@ -16,9 +16,10 @@ def update_script():
     get_file_from_github("item_table")
     get_file_from_github("building_data")
     get_file_from_github("gamedata_const")
+    get_file_from_github("stage_table")
 
 
-# update_script()
+update_script()
 
 
 root = tk.Tk()

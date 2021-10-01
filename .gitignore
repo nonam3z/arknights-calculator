@@ -3,3 +3,4 @@
 /dist/main/
 /venv/
 /jsons/
+/jsons/*.json

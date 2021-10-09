@@ -60,7 +60,7 @@ class Panel(tk.Frame):
         self.selectSkill3["to"] = self.ear.skill_lvl(self.selectElite.get())
 
     def sync_spinbox(self, sbvalue):
-        if (sbvalue != self.selectSkill1 or sbvalue != self.selectSkill2 or sbvalue != self.selectSkill3) and int(sbvalue) <= 7:
+        if int(sbvalue) <= 7:
             self.selectSkill1.delete(0, 9)
             self.selectSkill1.insert(0, sbvalue)
             self.selectSkill2.delete(0, 9)

@@ -3,6 +3,7 @@ from tkinter import ttk
 from tkinter import *
 import plannerPanels
 import ArknightsDataParser
+import inventoryPanels
 import json
 
 

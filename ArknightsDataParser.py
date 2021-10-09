@@ -22,7 +22,7 @@ def update_script():
     get_file_from_github("stage_table")
 
 
-update_script()
+# update_script()
 
 ears = json.load(open("jsons/character_table.json", encoding='utf-8'))
 items = json.load(open("jsons/item_table.json", encoding='utf-8'))
@@ -97,13 +97,6 @@ class Item:
             if item["buildingProductList"][0]["roomType"] == "WORKSHOP":
                 self.itemCraftingId = item["buildingProductList"][0]["formulaId"]
                 self.formula = formulas["workshopFormulas"][self.itemCraftingId]
-
-def create_inventory(self):
-    inventory = []
-    for craftingitem in items["items"].values():
-        if craftingitem["classifyType"] == "MATERIAL" and craftingitem["itemType"] == "MATERIAL":
-            inventory[craftingitem] = craftingitem
-    return inventory
 
 
 class OperatorState:

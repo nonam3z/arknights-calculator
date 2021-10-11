@@ -22,5 +22,5 @@ class Application(tk.Frame):
         self.tabs.grid(row=0, column=0, sticky="nsew")
         self.tabs.add(plannerFrame.Planner(self), text="Planner")
         self.tabs.add(inventoryFrame.InventoryFrame(self), text="Inventory Depot")
-        self.tabs.add(PictureTest.PictureTest(self), text="Testing Facility")
+        # self.tabs.add(PictureTest.PictureTest(self), text="Testing Facility")
 

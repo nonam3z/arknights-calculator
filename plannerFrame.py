@@ -10,12 +10,13 @@ import json
 class Planner(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
+
         self.grid(padx=5, pady=5, sticky="nsew")
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
         self.rowconfigure(3, weight=1)
-        self.master = master
 
+        self.master = master
         self.ear = 0
         self.earsListDict = {}
 
@@ -25,10 +26,10 @@ class Planner(tk.Frame):
         self.selectOperator.grid(row=0, columnspan=2, padx=3, pady=(3, 10), sticky="ew")
         self.selectOperator.bind("<<ComboboxSelected>>", self.set_max_lvls)
 
-        self.currentStats = plannerPanels.Panel(self)
+        self.currentStats = plannerPanels.CalcPanel(self)
         self.currentStats.grid(column=0, row=1, padx=3, sticky="nsew")
 
-        self.desiredStats = plannerPanels.Panel(self)
+        self.desiredStats = plannerPanels.CalcPanel(self)
         self.desiredStats.grid(column=1, row=1, padx=3, sticky="nsew")
 
         self.leftButtonsFrame = tk.Frame(self)

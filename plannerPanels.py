@@ -3,9 +3,10 @@ from tkinter import ttk
 import ArknightsDataParser
 
 
-class Panel(tk.Frame):
+class CalcPanel(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
+
         self.columnconfigure(1, weight=1)
 
         self.ear = 0

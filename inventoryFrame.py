@@ -7,7 +7,6 @@ import math
 from PIL import Image, ImageTk
 
 
-
 inv = inventoryPanels.create_inventory()
 inventoryPanels.calc_cost(inv)
 

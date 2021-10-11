@@ -79,8 +79,4 @@ class InvPanel(tk.Frame):
         # self.itemNeed.grid(row=2, column=1)
 
 
-
-
-
-
 None

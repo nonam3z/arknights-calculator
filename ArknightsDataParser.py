@@ -50,6 +50,7 @@ class Operator:
         self.name = ear["name"]
         self.rarity = ear["rarity"]
         self.maxElite = len(ear["phases"])-1
+        self.skills = ear["skills"]
 
     def phase(self, phase):
         if len(self.ear["phases"]) > 0:
@@ -154,30 +155,24 @@ def calculate(operator):
     if results["4001"] == 0:
         results.pop("4001", 0)
     if operator.current.skill1 < operator.desired.skill1 <= 10:
-        if operator.desired.skill1 > 7:
-            for i in range(operator.current.skill1-1, 6):
-                skill_lvl_up_cost = ear.ear["allSkillLvlup"][i]["lvlUpCost"]
-                for c in skill_lvl_up_cost:
-                    name = Item(c["id"]).itemId
-                    results[name] = results.get(name, 0) + c["count"]
-        else:
+        if operator.desired.skill1 <= 7:
             for i in range(operator.current.skill1-1, operator.desired.skill1-1):
                 skill_lvl_up_cost = ear.ear["allSkillLvlup"][i]["lvlUpCost"]
                 for c in skill_lvl_up_cost:
                     name = Item(c["id"]).itemId
                     results[name] = results.get(name, 0) + c["count"]
     if operator.current.skill1 < operator.desired.skill1 <= 10 and 7 < operator.desired.skill1:
-        cost1 = calculate_skills(operator.name, 0, 0, operator.desired.skill1 - 7)
+        cost1 = calculate_skills(operator.name, 0, operator.current.skill1-7, operator.desired.skill1 - 7)
         for i in cost1.items():
             count = results.get(i[0], 0)
             results[i[0]] = count + i[1]
     if operator.current.skill2 < operator.desired.skill2 <= 10 and 7 < operator.desired.skill2:
-        cost2 = calculate_skills(operator.name, 1, 0, operator.desired.skill2 - 7)
+        cost2 = calculate_skills(operator.name, 1, operator.current.skill2-7, operator.desired.skill2 - 7)
         for i in cost2.items():
             count = results.get(i[0], 0)
             results[i[0]] = count + i[1]
     if operator.current.skill3 < operator.desired.skill3 <= 10 and 7 < operator.desired.skill3:
-        cost3 = calculate_skills(operator.name, 2, 0, operator.desired.skill3 - 7)
+        cost3 = calculate_skills(operator.name, 2, operator.current.skill3-7, operator.desired.skill3 - 7)
         for i in cost3.items():
             count = results.get(i[0], 0)
             results[i[0]] = count + i[1]

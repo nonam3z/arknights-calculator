@@ -18,7 +18,7 @@ class Planner(tk.Frame):
 
         self.master = master
         self.ear = 0
-        self.earsListDict = {}
+        self.allEarsList = {}
 
         self.selectOperator = ttk.Combobox(self)
         self.selectOperator.insert(0, "Nearl")
@@ -117,7 +117,7 @@ class Planner(tk.Frame):
             selection = self.earsList.item(s)
             values = selection.get('values')
             name = values[0]
-            for ear in self.earsListDict.values():
+            for ear in self.allEarsList.values():
                 if ear.name == name:
                     self.ear = ear
                     break
@@ -138,45 +138,43 @@ class Planner(tk.Frame):
     # (i + " : " + str(results.get(i))
 
     def add_ear_to_list(self):
-        earlist_copy = self.earsListDict.copy()
+        earlist_copy = self.allEarsList.copy()
         name = self.selectOperator.get()
-        results = self.create_upgrade_string()
+        results = self.create_upgrade_string(self.currentStats.construct_op(), self.desiredStats.construct_op())
         if results:
             if earlist_copy.get(name):
-                ear = self.earsListDict.get(name)
+                ear = self.allEarsList.get(name)
                 self.earsList.delete(ear.iid)
-                self.earsListDict.pop(name)
+                self.allEarsList.pop(name)
                 iid = self.earsList.insert("", tk.END, values=(self.selectOperator.get(), results))
                 operator = ArknightsDataParser.OperatorState(iid, self.selectOperator.get(),
                                                              self.currentStats.construct_op(),
                                                              self.desiredStats.construct_op())
-                self.earsListDict.setdefault(operator.name)
-                self.earsListDict[operator.name] = operator
+                self.allEarsList.setdefault(operator.name)
+                self.allEarsList[operator.name] = operator
             else:
                 iid = self.earsList.insert("", tk.END, values=(self.selectOperator.get(), results))
                 operator = ArknightsDataParser.OperatorState(iid, self.selectOperator.get(),
                                                              self.currentStats.construct_op(),
                                                              self.desiredStats.construct_op())
-                self.earsListDict.setdefault(operator.name)
-                self.earsListDict[operator.name] = operator
+                self.allEarsList.setdefault(operator.name)
+                self.allEarsList[operator.name] = operator
 
-    def create_upgrade_string(self):
-        current = self.currentStats
-        desired = self.desiredStats
+    def create_upgrade_string(self, current, desired):
         results = ""
-        if int(current.selectElite.get()) < int(desired.selectElite.get()):
-            results += (str(current.selectElite.get()) + "e" + str(current.selectLvl.get()) + " >>> "
-                        + str(desired.selectElite.get()) + "e" + str(desired.selectLvl.get()) + "; ")
-        if (int(current.selectElite.get()) == int(desired.selectElite.get())) and (
-                int(current.selectLvl.get()) < int(desired.selectLvl.get())):
-            results += (str(current.selectElite.get()) + "e" + str(current.selectLvl.get()) + " >>> "
-                        + str(desired.selectElite.get()) + "e" + str(desired.selectLvl.get()) + "; ")
-        if int(current.selectSkill1.get()) < int(desired.selectSkill1.get()):
-            results += ("S1(" + str(current.selectSkill1.get()) + " to " + str(desired.selectSkill1.get()) + "); ")
-        if int(current.selectSkill2.get()) < int(desired.selectSkill2.get()):
-            results += ("S2(" + str(current.selectSkill2.get()) + " to " + str(desired.selectSkill2.get()) + "); ")
-        if int(current.selectSkill3.get()) < int(desired.selectSkill3.get()):
-            results += ("S3(" + str(current.selectSkill3.get()) + " to " + str(desired.selectSkill3.get()) + "); ")
+        if int(current.elite) < int(desired.elite):
+            results += (str(current.elite) + "e" + str(current.level) + " >>> "
+                        + str(desired.elite) + "e" + str(desired.level) + "; ")
+        if (int(current.elite) == int(desired.elite)) and (
+                int(current.level) < int(desired.level)):
+            results += (str(current.elite) + "e" + str(current.level) + " >>> "
+                        + str(desired.elite) + "e" + str(desired.level) + "; ")
+        if int(current.skill1) < int(desired.skill1):
+            results += ("S1(" + str(current.skill1) + " to " + str(desired.skill1) + "); ")
+        if int(current.skill2) < int(desired.skill2):
+            results += ("S2(" + str(current.skill2) + " to " + str(desired.skill2) + "); ")
+        if int(current.skill3) < int(desired.skill3):
+            results += ("S3(" + str(current.skill3) + " to " + str(desired.skill3) + "); ")
         return results
 
         # e1 = str(operator.current.elite)
@@ -192,7 +190,7 @@ class Planner(tk.Frame):
             name = self.earsList.item(s)
             values = name.get('values')
             self.earsList.delete(s)
-            self.earsListDict.pop(values[0])
+            self.allEarsList.pop(values[0])
 
     def set_max_lvls(self, event):
         ear = ArknightsDataParser.Operator(self.selectOperator.get())
@@ -200,31 +198,22 @@ class Planner(tk.Frame):
         self.desiredStats.clear_spinboxes()
         self.currentStats.callback()
         self.desiredStats.callback()
-        if 0 <= ear.rarity <= 1:
-            self.currentStats.selectSkill1.configure(state=DISABLED)
-            self.currentStats.selectSkill2.configure(state=DISABLED)
-            self.currentStats.selectSkill3.configure(state=DISABLED)
-            self.desiredStats.selectSkill1.configure(state=DISABLED)
-            self.desiredStats.selectSkill2.configure(state=DISABLED)
-            self.desiredStats.selectSkill3.configure(state=DISABLED)
-        if ear.rarity == 2:
+        self.skills_counter(ear.skills)
+
+    def skills_counter(self, skills):
+        self.currentStats.selectSkill1.configure(state=DISABLED)
+        self.currentStats.selectSkill2.configure(state=DISABLED)
+        self.currentStats.selectSkill3.configure(state=DISABLED)
+        self.desiredStats.selectSkill1.configure(state=DISABLED)
+        self.desiredStats.selectSkill2.configure(state=DISABLED)
+        self.desiredStats.selectSkill3.configure(state=DISABLED)
+        if len(skills) >= 1:
             self.currentStats.selectSkill1.configure(state=NORMAL)
-            self.currentStats.selectSkill2.configure(state=DISABLED)
-            self.currentStats.selectSkill3.configure(state=DISABLED)
             self.desiredStats.selectSkill1.configure(state=NORMAL)
-            self.desiredStats.selectSkill2.configure(state=DISABLED)
-            self.desiredStats.selectSkill3.configure(state=DISABLED)
-        if 3 <= ear.rarity <= 4:
-            self.currentStats.selectSkill1.configure(state=NORMAL)
+        if len(skills) >= 2:
             self.currentStats.selectSkill2.configure(state=NORMAL)
-            self.currentStats.selectSkill3.configure(state=DISABLED)
-            self.desiredStats.selectSkill1.configure(state=NORMAL)
             self.desiredStats.selectSkill2.configure(state=NORMAL)
-            self.desiredStats.selectSkill3.configure(state=DISABLED)
-        if ear.rarity == 5:
-            self.currentStats.selectSkill1.configure(state=NORMAL)
-            self.currentStats.selectSkill2.configure(state=NORMAL)
+        if len(skills) == 3:
             self.currentStats.selectSkill3.configure(state=NORMAL)
-            self.desiredStats.selectSkill1.configure(state=NORMAL)
-            self.desiredStats.selectSkill2.configure(state=NORMAL)
             self.desiredStats.selectSkill3.configure(state=NORMAL)
+

@@ -1,10 +1,14 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import *
+
+import inventoryFrame
 import plannerPanels
 import ArknightsDataParser
 import win32clipboard
 import json
+import math
+from PIL import Image, ImageTk
 
 
 class Planner(tk.Frame):
@@ -19,6 +23,9 @@ class Planner(tk.Frame):
         self.master = master
         self.ear = 0
         self.allEarsList = {}
+
+        self.style = ttk.Style()
+        self.itemThumbnail = tk.Canvas(self, width=25, height=25)
 
         self.selectOperator = ttk.Combobox(self)
         self.selectOperator.insert(0, "Nearl")
@@ -70,7 +77,7 @@ class Planner(tk.Frame):
 
         # self.results = ttk.Listbox(self.leftFrame, relief="sunken", bg="#FFFFFF", justify="left", activestyle='none',
         #                           takefocus=0, selectmode=tk.EXTENDED)
-        self.results = ttk.Treeview(self.leftFrame, columns=["name", "count"])
+        self.results = ttk.Treeview(self.leftFrame, columns=["name", "count", "have"])
         self.results.grid(column=0, row=0, sticky="nsew")
         self.results.column("#0", stretch=False, width=75)
         self.results.heading("#0", text="Icon", anchor="center")
@@ -78,6 +85,9 @@ class Planner(tk.Frame):
         self.results.heading("name", text="Item", anchor="center")
         self.results.column("count", stretch=True, width=100)
         self.results.heading("count", text="Count", anchor="center")
+        self.results.column("have", stretch=True, width=100)
+        self.results.heading("have", text="Have", anchor="center")
+        # self.style.configure("Treeview", rowheight=50)
         # self.results["width"] = self.leftFrame.winfo_width()
         # self.results["height"] = self.leftFrame.winfo_height()
 
@@ -131,8 +141,14 @@ class Planner(tk.Frame):
             self.results.delete(i)
         if results:
             for i in results:
-                name = ArknightsDataParser.Item(i).name
-                self.results.insert("", tk.END, values=(name, results.get(i)))
+                if i != "5001":
+                    name = ArknightsDataParser.Item(i).name
+                    self.results.insert("", tk.END,
+                                        values=(name, results.get(i), inventoryFrame.frames[i].itemHave.get()))
+                else:
+                    name = ArknightsDataParser.Item(i).name
+                    self.results.insert("", tk.END,
+                                        values=(name, results.get(i)))
         return results
 
     # (i + " : " + str(results.get(i))

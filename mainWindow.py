@@ -2,13 +2,15 @@ import tkinter as tk
 from tkinter import ttk
 import plannerFrame
 import inventoryFrame
-import PictureTest
 import json
 import os
 import ArknightsDataParser
 
 if os.path.exists("savedata.json"):
-    savedata = json.load(open("savedata.json", encoding='utf-8'))
+    savedata = {}
+    size = os.path.getsize("savedata.json")
+    if size:
+        savedata = json.load(open("savedata.json", encoding='utf-8'))
 
 
 class Application(tk.Frame):
@@ -28,21 +30,24 @@ class Application(tk.Frame):
         self.tabs.grid(row=0, column=0, sticky="nsew")
         self.planner = plannerFrame.Planner(self)
         self.tabs.add(self.planner, text="Planner")
-        self.tabs.add(inventoryFrame.InventoryFrame(self), text="Inventory Depot")
-        # self.tabs.add(PictureTest.PictureTest(self), text="Testing Facility")
+        self.inventory = inventoryFrame.InventoryFrame(self)
+        self.tabs.add(self.inventory, text="Inventory Depot")
 
     def restore_data(self):
-        for ear in savedata.values():
-            name = ear["name"]
-            iid = ear["iid"]
-            sc = ear["current"]
-            sd = ear["desired"]
-            current = ArknightsDataParser.Stats(sc["elite"], sc["level"], sc["skill1"], sc["skill2"], sc["skill3"])
-            desired = ArknightsDataParser.Stats(sd["elite"], sd["level"], sd["skill1"], sd["skill2"], sd["skill3"])
-            operator = ArknightsDataParser.OperatorState(iid, name, current, desired)
-            self.planner.allEarsList.setdefault(operator.name)
-            self.planner.allEarsList[operator.name] = operator
-            self.planner.earsList.insert("", tk.END, values=(name, self.planner.create_upgrade_string(current, desired)))
+        if savedata:
+            for ear in savedata["earList"].values():
+                name = ear["name"]
+                iid = ear["iid"]
+                sc = ear["current"]
+                sd = ear["desired"]
+                current = ArknightsDataParser.Stats(sc["elite"], sc["level"], sc["skill1"], sc["skill2"], sc["skill3"])
+                desired = ArknightsDataParser.Stats(sd["elite"], sd["level"], sd["skill1"], sd["skill2"], sd["skill3"])
+                operator = ArknightsDataParser.OperatorState(iid, name, current, desired)
+                self.planner.allEarsList.setdefault(operator.name)
+                self.planner.allEarsList[operator.name] = operator
+                self.planner.earsList.insert("", tk.END, values=(name, self.planner.create_upgrade_string(current, desired)))
+            for item in savedata["inventory"].values():
+                inventoryFrame.frames[item["itemId"]].itemHave.set(int(item["have"]))
 
 
 

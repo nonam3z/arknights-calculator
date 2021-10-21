@@ -1,17 +1,21 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import *
-import ArknightsDataParser
+import ArknightsDataParser as ADP
 import inventoryPanels
+import PenguinLogisticsParser as PLP
 import math
+import mainWindow
 from PIL import Image, ImageTk
 
 
-inv = inventoryPanels.create_inventory()
-inventoryPanels.calc_cost(inv)
+inv = PLP.create_inventory()
+PLP.calc_cost(inv)
 
 i = int(inv.__len__())
 j = math.ceil(i/6)
+
+frames = {}
 
 
 class InventoryFrame(tk.Frame):
@@ -25,30 +29,32 @@ class InventoryFrame(tk.Frame):
             for r in range(j):
                 self.rowconfigure(r, weight=1)
 
-        self.frames = []
-
-        for i in inv.values():
+        for k in inv.values():
             item = inventoryPanels.InvPanel(self)
-            item.itemId = i["itemId"]
-            item.itemName.configure(text=i["name"], justify="right", anchor="e")
+            item.itemId = k["itemId"]
+            item.itemName.configure(text=k["name"], justify="right", anchor="e")
             item.itemHave.insert(0, "0")
-            item.coos = Image.open("items/"+i["iconId"]+".png")
-            item.coos.thumbnail((40, 40), Image.ANTIALIAS)
-            item.imgIcon = ImageTk.PhotoImage(item.coos)
+            item.iconId = k["iconId"]
+            item.icon = Image.open("items/" + k["iconId"] + ".png")
+            item.icon.thumbnail((40, 40), Image.ANTIALIAS)
+            # item.thumbnail = Image.open("items/" + k["iconId"] + ".png")
+            # item.thumbnail.thumbnail((20, 20), Image.ANTIALIAS)
+            item.imgIcon = ImageTk.PhotoImage(item.icon)
             item.itemIcon.create_image(10, 5, anchor="nw", image=item.imgIcon)
-            self.frames.append(item)
+            # item.imgThumbnail = ImageTk.PhotoImage(item.thumbnail)
+            # item.itemThumbnail.create_image(2, 2, anchor="nw", image=item.imgThumbnail)
+            frames.setdefault(item.itemId)
+            frames[item.itemId] = item
 
-        l = 0
-        for n in range(j):
-            for m in range(6):
-                if l<self.frames.__len__():
-                    self.frames[l].grid(row=n, column=m, sticky="nsew")
-                    l += 1
-                else: break
+        n = 0
+        m = 0
 
-        for a in range(self.frames.__len__()):
-            self.show_frame(a)
+        for itemFrame in frames.values():
+            itemFrame.grid(row=n, column=m, sticky="nsew")
+            m = m + 1
+            if m >= 6:
+                n = n + 1
+                m = 0
 
-    def show_frame(self, index):
-        frame = self.frames[index]
-        frame.tkraise()
+        for frame in frames.values():
+            frame.tkraise()

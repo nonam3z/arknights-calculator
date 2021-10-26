@@ -23,9 +23,9 @@ class Planner(tk.Frame):
         self.master = master
         self.ear = 0
         self.allEarsList = {}
+        self.list = {}
 
         self.style = ttk.Style()
-        self.itemThumbnail = tk.Canvas(self, width=25, height=25)
 
         self.selectOperator = ttk.Combobox(self)
         self.selectOperator.insert(0, "Nearl")
@@ -68,7 +68,7 @@ class Planner(tk.Frame):
         self.earsList.heading("name", text="Name", anchor="center")
         self.earsList.column("desired", stretch=True, width=100)
         self.earsList.heading("desired", text="Desired changes", anchor="center")
-        self.earsList.bind("<<TreeviewSelect>>", self.calculate)
+        self.earsList.bind("<<TreeviewSelect>>", self.create_results_list)
 
         self.leftFrame = tk.Frame(self)
         self.leftFrame.grid(column=1, row=3, sticky="nsew", pady=(6, 0), padx=(3, 0))
@@ -120,7 +120,7 @@ class Planner(tk.Frame):
         win32clipboard.SetClipboardText(json.dumps(penguin_export))
         win32clipboard.CloseClipboard()
 
-    def calculate(self, event):
+    def calculate(self): # Расчет стоимости апгрейда выделенных в списке ушек.
         results = {}
         tpl = self.earsList.selection()
         for s in tpl:
@@ -131,27 +131,32 @@ class Planner(tk.Frame):
                 if ear.name == name:
                     self.ear = ear
                     break
-            # operator = ArknightsDataParser.OperatorState(self.ear.name, self.ear.current, self.ear.desired)
             items = ArknightsDataParser.calculate(self.ear)
             if items:
                 for i in items.items():
                     count = results.get(i[0], 0)
                     results[i[0]] = count + i[1]
+        return results
+
+    def create_results_list(self, event):  # Отображение списка результатов.
+        results = self.calculate()
+        for l in results:
+            self.list[l] = {}
+            self.list[l]["itemId"] = l
+            self.list[l]["name"] = ArknightsDataParser.Item(l).name
+            self.list[l]["iconId"] = ArknightsDataParser.Item(l).iconId
+            icon = Image.open("items/" + self.list[l]["iconId"] + ".png")
+            icon.thumbnail((20, 20), Image.ANTIALIAS)
+            icon = ImageTk.PhotoImage(icon)
+            self.list[l]["icon"] = icon
+            self.list[l]["need"] = results.get(l)
+            self.list[l]["have"] = inventoryFrame.frames[l].itemHave.get()
         for i in self.results.get_children():
             self.results.delete(i)
         if results:
             for i in results:
-                if i != "5001":
-                    name = ArknightsDataParser.Item(i).name
-                    self.results.insert("", tk.END,
-                                        values=(name, results.get(i), inventoryFrame.frames[i].itemHave.get()))
-                else:
-                    name = ArknightsDataParser.Item(i).name
-                    self.results.insert("", tk.END,
-                                        values=(name, results.get(i)))
-        return results
-
-    # (i + " : " + str(results.get(i))
+                self.results.insert("", tk.END, image=self.list[i]["icon"],
+                                    values=(self.list[i]["name"], self.list[i]["need"], self.list[i]["have"]))
 
     def add_ear_to_list(self):
         earlist_copy = self.allEarsList.copy()

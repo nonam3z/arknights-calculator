@@ -9,8 +9,10 @@ import mainWindow
 from PIL import Image, ImageTk
 
 
-inv = PLP.create_inventory()
-PLP.calc_cost(inv)
+inventory = PLP.Inventory()
+inv = inventory.inventory
+# PLP.calc_cost(inv)
+# PLP.calc_best_path(inv)
 
 i = int(inv.__len__())
 j = math.ceil(i/6)
@@ -31,18 +33,14 @@ class InventoryFrame(tk.Frame):
 
         for k in inv.values():
             item = inventoryPanels.InvPanel(self)
-            item.itemId = k["itemId"]
-            item.itemName.configure(text=k["name"], justify="right", anchor="e")
+            item.itemId = k.itemId
+            item.itemName.configure(text=k.name, justify="right", anchor="e")
             item.itemHave.insert(0, "0")
-            item.iconId = k["iconId"]
-            item.icon = Image.open("items/" + k["iconId"] + ".png")
+            item.iconId = k.iconId
+            item.icon = Image.open("items/" + k.iconId + ".png")
             item.icon.thumbnail((40, 40), Image.ANTIALIAS)
-            # item.thumbnail = Image.open("items/" + k["iconId"] + ".png")
-            # item.thumbnail.thumbnail((20, 20), Image.ANTIALIAS)
-            item.imgIcon = ImageTk.PhotoImage(item.icon)
-            item.itemIcon.create_image(10, 5, anchor="nw", image=item.imgIcon)
-            # item.imgThumbnail = ImageTk.PhotoImage(item.thumbnail)
-            # item.itemThumbnail.create_image(2, 2, anchor="nw", image=item.imgThumbnail)
+            item.icon = ImageTk.PhotoImage(item.icon)
+            item.itemIcon.create_image(10, 5, anchor="nw", image=item.icon)
             frames.setdefault(item.itemId)
             frames[item.itemId] = item
 
@@ -50,11 +48,12 @@ class InventoryFrame(tk.Frame):
         m = 0
 
         for itemFrame in frames.values():
-            itemFrame.grid(row=n, column=m, sticky="nsew")
-            m = m + 1
-            if m >= 6:
-                n = n + 1
-                m = 0
+            if itemFrame.itemId != "5001":
+                itemFrame.grid(row=n, column=m, sticky="nsew")
+                m = m + 1
+                if m >= 6:
+                    n = n + 1
+                    m = 0
 
         for frame in frames.values():
             frame.tkraise()

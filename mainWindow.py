@@ -45,7 +45,7 @@ class Application(tk.Frame):
                 operator = ArknightsDataParser.OperatorState(iid, name, current, desired)
                 self.planner.allEarsList.setdefault(operator.name)
                 self.planner.allEarsList[operator.name] = operator
-                self.planner.earsList.insert("", tk.END, values=(name, self.planner.create_upgrade_string(current, desired)))
+                self.planner.earsList.insert("", tk.END, values=(name, self.planner.create_upgrade_string(current, desired)), iid=iid)
             for item in savedata["inventory"].values():
                 inventoryFrame.frames[item["itemId"]].itemHave.set(int(item["have"]))
 

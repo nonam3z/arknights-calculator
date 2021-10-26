@@ -1,50 +1,19 @@
 import json
+
+import ArknightsDataParser
 import ArknightsDataParser as ADP
 from urllib.request import urlretrieve
 import os
-
-# repository = "https://penguin-stats.io/PenguinStats/api/v2/result/matrix?show_closed_zones=false&server=US"
-# file = "materials.json"
-# os.remove(file)
-# open(file, 'w+')
-# urlretrieve(repository, file)
-
-mats = json.load(open("materials.json", encoding='utf-8'))
-mats = mats["matrix"]
-stages = json.load(open("jsons/stage_table.json", encoding='utf-8'))
-stages = stages["stages"]
+from PIL import Image, ImageTk
 
 
-def create_inventory():
-    inventory = {}
-    for itemList in ADP.items["items"].values():
-        if itemList["itemId"] == "4001":
-            inventory[itemList["itemId"]] = itemList
-            inventory[itemList["itemId"]]["stages"] = {}
-        if itemList["classifyType"] == "MATERIAL" and itemList["itemType"] == "MATERIAL" and not itemList["obtainApproach"]:
-            inventory[itemList["itemId"]] = itemList
-            inventory[itemList["itemId"]]["stages"] = {}
-    for i in range(len(mats)):
-        count = mats[i]
-        for items in inventory.values():
-            if count["itemId"] == items["itemId"]:
-                inventory[count["itemId"]]["stages"][count["stageId"]] = count
-    return inventory
-
-
-def calc_cost(inv):
-    for items in inv.values():
-        for i in items["stages"].values():
-            perRun = float(i["quantity"])/float(i["times"])
-            if stages.get(i["stageId"]):
-                apCost = stages[i["stageId"]]["apCost"]
-            else:
-                apCost = 1000
-            inv[i["itemId"]]["stages"][i["stageId"]]["perRun"] = perRun
-            inv[i["itemId"]]["stages"][i["stageId"]]["apCost"] = apCost
-            if perRun > 0:
-                inv[i["itemId"]]["stages"][i["stageId"]]["costPerItem"] = apCost/perRun
-            else:
-                inv[i["itemId"]]["stages"][i["stageId"]]["costPerItem"] = 1000
-    return None
+class Inventory:
+    def __init__(self):
+        self.inventory = {}
+        for item in ADP.items["items"].values():
+            if item["itemId"] == "4001" or item["itemId"] == "5001":
+                self.inventory[item["itemId"]] = ADP.Item(item["itemId"])
+            if item["classifyType"] == "MATERIAL" and item["itemType"] == "MATERIAL" and not item["obtainApproach"]:
+                self.inventory[item["itemId"]] = ADP.Item(item["itemId"])
+    None
 

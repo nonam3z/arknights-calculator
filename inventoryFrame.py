@@ -3,13 +3,12 @@ from tkinter import ttk
 from tkinter import *
 import ArknightsDataParser as ADP
 import inventoryPanels
-import PenguinLogisticsParser as PLP
 import math
 import mainWindow
 from PIL import Image, ImageTk
 
 
-inventory = PLP.Inventory()
+inventory = ADP.Inventory()
 inv = inventory.inventory
 # PLP.calc_cost(inv)
 # PLP.calc_best_path(inv)

@@ -99,6 +99,17 @@ class Operator:
             return self.ear["phases"][elite]["evolveCost"]
 
 
+class Inventory:
+    def __init__(self):
+        self.inventory = {}
+        for item in items["items"].values():
+            if item["itemId"] == "4001" or item["itemId"] == "5001":
+                self.inventory[item["itemId"]] = Item(item["itemId"])
+            if item["classifyType"] == "MATERIAL" and item["itemType"] == "MATERIAL" and not item["obtainApproach"]:
+                self.inventory[item["itemId"]] = Item(item["itemId"])
+    None
+
+
 class Item:
     def __init__(self, itemid):
         item = None

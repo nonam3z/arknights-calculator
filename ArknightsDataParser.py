@@ -8,7 +8,7 @@ os.makedirs("jsons", exist_ok=True)
 
 
 def get_file_from_github(filename):
-    repository = "https://raw.githubusercontent.com/Dimbreath/ArknightsData/master/en-US/gamedata/excel/"
+    repository = "https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/en_US/gamedata/excel/"
     data = (repository+filename+".json")
     file = ("jsons/"+filename+".json")
     os.remove(file)
@@ -25,12 +25,21 @@ def get_penguin_data():
 
 
 def update_script():
+    print("Getting characters data...")
     get_file_from_github("character_table")
+    print("Getting items data...")
     get_file_from_github("item_table")
+    print("Getting formulas data...")
     get_file_from_github("building_data")
+    print("Getting game constants...")
     get_file_from_github("gamedata_const")
+    print("Getting stages data...")
     get_file_from_github("stage_table")
-    get_penguin_data()
+    print("Download complete!")
+    # get_penguin_data()
+
+
+# update_script()
 
 
 ears = json.load(open("jsons/character_table.json", encoding='utf-8'))
@@ -41,9 +50,6 @@ materials = json.load(open("jsons/materials.json", encoding='utf-8'))
 stages = json.load(open("jsons/stage_table.json", encoding='utf-8'))
 materials = materials["matrix"]
 stages = stages["stages"]
-pass
-
-# update_script()
 
 
 def return_list_of_ears():
@@ -107,7 +113,6 @@ class Inventory:
                 self.inventory[item["itemId"]] = Item(item["itemId"])
             if item["classifyType"] == "MATERIAL" and item["itemType"] == "MATERIAL" and not item["obtainApproach"]:
                 self.inventory[item["itemId"]] = Item(item["itemId"])
-    None
 
 
 class Item:

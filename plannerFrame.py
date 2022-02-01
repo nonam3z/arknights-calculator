@@ -16,8 +16,8 @@ class Planner(tk.Frame):
         super().__init__(master)
 
         self.grid(padx=5, pady=5, sticky="nsew")
-        self.columnconfigure(0, weight=1)
-        self.columnconfigure(1, weight=1)
+        self.columnconfigure(0, weight=1, minsize=590)
+        self.columnconfigure(1, weight=1, minsize=590)
         self.rowconfigure(3, weight=1)
 
         self.master = master
@@ -81,11 +81,11 @@ class Planner(tk.Frame):
         self.results.grid(column=0, row=0, sticky="nsew")
         self.results.column("#0", stretch=False, width=75)
         self.results.heading("#0", text="Icon", anchor="center")
-        self.results.column("name", stretch=True, width=100)
+        self.results.column("name", stretch=True, width=150)
         self.results.heading("name", text="Item", anchor="center")
-        self.results.column("count", stretch=True, width=100)
+        self.results.column("count", stretch=True, width=70)
         self.results.heading("count", text="Count", anchor="center")
-        self.results.column("have", stretch=True, width=100)
+        self.results.column("have", stretch=True, width=70)
         self.results.heading("have", text="Have", anchor="center")
         # self.style.configure("Treeview", rowheight=50)
         # self.results["width"] = self.leftFrame.winfo_width()
@@ -94,7 +94,7 @@ class Planner(tk.Frame):
         self.set_max_lvls("")
 
     def calculate_button(self):
-        results = self.calculate("")
+        results = self.calculate()
         penguin_export = {}
         json_data = {"@type":"@penguin-statistics/planner/config"}
         items_dict = {}

@@ -8,29 +8,29 @@ import mainWindow
 from PIL import Image, ImageTk
 
 
-inventory = ADP.Inventory()
-inv = inventory.inventory
-# PLP.calc_cost(inv)
-# PLP.calc_best_path(inv)
-
-i = int(inv.__len__())
-j = math.ceil(i/6)
-
-frames = {}
+def create_inventory():
+    inv = ADP.inventory.items
+    i = int(inv.__len__())
+    j = math.ceil(i / 6)
+    return {'inv': inv, 'i': i, 'j': j}
 
 
 class InventoryFrame(tk.Frame):
+    frames = {}
+
     def __init__(self, master=None):
         super().__init__(master)
         self.grid(padx=5, pady=5, sticky="nsew")
         self.master = master
 
+        self.inv = create_inventory()
+
         for c in range(6):
             self.columnconfigure(c, weight=1)
-            for r in range(j):
+            for r in range(self.inv['j']):
                 self.rowconfigure(r, weight=1)
 
-        for k in inv.values():
+        for k in self.inv['inv'].values():
             item = inventoryPanels.InvPanel(self)
             item.itemId = k.itemId
             item.itemName.configure(text=k.name, justify="right", anchor="e")
@@ -40,13 +40,13 @@ class InventoryFrame(tk.Frame):
             item.icon.thumbnail((40, 40), Image.ANTIALIAS)
             item.icon = ImageTk.PhotoImage(item.icon)
             item.itemIcon.create_image(10, 5, anchor="nw", image=item.icon)
-            frames.setdefault(item.itemId)
-            frames[item.itemId] = item
+            InventoryFrame.frames.setdefault(item.itemId)
+            InventoryFrame.frames[item.itemId] = item
 
         n = 0
         m = 0
 
-        for itemFrame in frames.values():
+        for itemFrame in InventoryFrame.frames.values():
             if itemFrame.itemId != "5001":
                 itemFrame.grid(row=n, column=m, sticky="nsew")
                 m = m + 1
@@ -54,5 +54,5 @@ class InventoryFrame(tk.Frame):
                     n = n + 1
                     m = 0
 
-        for frame in frames.values():
+        for frame in InventoryFrame.frames.values():
             frame.tkraise()

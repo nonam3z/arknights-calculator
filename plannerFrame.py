@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import *
 
-import inventoryFrame
+import inventoryFrame as iFrame
 import plannerPanels
 import ArknightsDataParser
 import win32clipboard
@@ -131,7 +131,7 @@ class Planner(tk.Frame):
                 if ear.name == name:
                     self.ear = ear
                     break
-            items = ArknightsDataParser.calculate(self.ear)
+            items = self.ear.cost
             if items:
                 for i in items.items():
                     count = results.get(i[0], 0)
@@ -150,7 +150,7 @@ class Planner(tk.Frame):
             icon = ImageTk.PhotoImage(icon)
             self.list[l]["icon"] = icon
             self.list[l]["need"] = results.get(l)
-            self.list[l]["have"] = inventoryFrame.frames[l].itemHave.get()
+            self.list[l]["have"] = iFrame.InventoryFrame.frames[l].itemHave.get()
         for i in self.results.get_children():
             self.results.delete(i)
         if results:
@@ -219,7 +219,7 @@ class Planner(tk.Frame):
         self.desiredStats.clear_spinboxes()
         self.currentStats.callback()
         self.desiredStats.callback()
-        self.skills_counter(ear.skills)
+        self.skills_counter(ear.ear["skills"])
 
     def skills_counter(self, skills):
         self.currentStats.selectSkill1.configure(state=DISABLED)

@@ -5,9 +5,7 @@ from tkinter import *
 import json
 import ArknightsDataParser
 import inventoryPanels
-import inventoryFrame
-
-savedata = {}
+import inventoryFrame as iFrame
 
 
 class EarEncoder(json.JSONEncoder):
@@ -18,22 +16,34 @@ class EarEncoder(json.JSONEncoder):
             return obj.__dict__
         if isinstance(obj, inventoryPanels.InvPanel):
             return obj.__dict__
-        if isinstance(obj, inventoryFrame.InventoryFrame):
+        if isinstance(obj, iFrame.InventoryFrame):
+            return obj.__dict__
+        if isinstance(obj, ArknightsDataParser.Operator):
+            return obj.__dict__
+        if isinstance(obj, ArknightsDataParser.Inventory):
+            return obj.__dict__
+        if isinstance(obj, ArknightsDataParser.Item):
             return obj.__dict__
         return json.JSONEncoder.default(self, obj)
 
 
-def save_list():
-    savedata["earList"] = app.planner.allEarsList
-    savedata["inventory"] = {}
-    for items in inventoryFrame.frames.values():
-        savedata["inventory"][items.itemId] = {}
-        savedata["inventory"][items.itemId]["itemId"] = items.itemId
-        savedata["inventory"][items.itemId]["have"] = items.itemHave.get()
+def save_data():
+    earList = app.planner.allEarsList
+    data = {"earList": {}, "inventory": {}}
+    for ears in earList.values():
+        data["earList"][ears.name] = {}
+        data["earList"][ears.name]["iid"] = ears.iid
+        data["earList"][ears.name]["name"] = ears.name
+        data["earList"][ears.name]["current"] = ears.current
+        data["earList"][ears.name]["desired"] = ears.desired
+    for items in iFrame.InventoryFrame.frames.values():
+        data["inventory"][items.itemId] = {}
+        data["inventory"][items.itemId]["itemId"] = items.itemId
+        data["inventory"][items.itemId]["have"] = items.itemHave.get()
     if os.path.exists("savedata.json"):
         os.remove("savedata.json")
     file = open("savedata.json", 'w+')
-    json.dump(savedata, file, cls=EarEncoder)
+    json.dump(data, file, cls=EarEncoder, indent=4)
     file.close()
     root.destroy()
 
@@ -43,5 +53,5 @@ Grid.rowconfigure(root, 0, weight=1)
 Grid.columnconfigure(root, 0, weight=1)
 app = mainWindow.Application(master=root)
 app.restore_data()
-root.protocol("WM_DELETE_WINDOW", save_list)
+root.protocol("WM_DELETE_WINDOW", save_data)
 app.mainloop()

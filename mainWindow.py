@@ -1,13 +1,14 @@
 import tkinter as tk
 from tkinter import ttk
 import plannerFrame
-import inventoryFrame
+import inventoryFrame as iFrame
 import json
 import os
 import ArknightsDataParser
 
+savedata = {}
+
 if os.path.exists("savedata.json"):
-    savedata = {}
     size = os.path.getsize("savedata.json")
     if size:
         savedata = json.load(open("savedata.json", encoding='utf-8'))
@@ -30,7 +31,7 @@ class Application(tk.Frame):
         self.tabs.grid(row=0, column=0, sticky="nsew")
         self.planner = plannerFrame.Planner(self)
         self.tabs.add(self.planner, text="Planner")
-        self.inventory = inventoryFrame.InventoryFrame(self)
+        self.inventory = iFrame.InventoryFrame(self)
         self.tabs.add(self.inventory, text="Inventory Depot")
 
     def restore_data(self):
@@ -45,10 +46,8 @@ class Application(tk.Frame):
                 operator = ArknightsDataParser.OperatorState(iid, name, current, desired)
                 self.planner.allEarsList.setdefault(operator.name)
                 self.planner.allEarsList[operator.name] = operator
-                self.planner.earsList.insert("", tk.END, values=(name, self.planner.create_upgrade_string(current, desired)), iid=iid)
+                self.planner.earsList.insert("", tk.END,
+                                             values=(name, self.planner.create_upgrade_string(current, desired)),
+                                             iid=iid)
             for item in savedata["inventory"].values():
-                inventoryFrame.frames[item["itemId"]].itemHave.set(int(item["have"]))
-
-
-
-
+                iFrame.InventoryFrame.frames[item["itemId"]].itemHave.set(int(item["have"]))

@@ -48,7 +48,7 @@ class CalcPanel(tk.Frame):
 
     def on_update(self):
         self.ear = ArknightsDataParser.Operator(self.master.selectOperator.get())
-        self.selectElite["to"] = self.ear.maxElite
+        self.selectElite["to"] = len(self.ear.ear["phases"]) - 1
         if self.selectElite["to"] <= int(self.selectElite.get()):
             self.selectElite.delete(0, 9)
             self.selectElite.insert(0, self.selectElite["to"])

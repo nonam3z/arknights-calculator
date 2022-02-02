@@ -122,6 +122,7 @@ class Item:
         self.name = item["name"]
         self.itemId = item["itemId"]
         self.iconId = item["iconId"]
+        self.icon = None
         self.rarity = item["rarity"]
         self.formula = []
         if item["buildingProductList"]:
@@ -130,9 +131,13 @@ class Item:
                 self.formula = formulas["workshopFormulas"][self.itemCraftingId]
         self.stages = self.get_stages()
         self.bestAp = math.inf
+        self.craftingAp = 0
         self.bestStage = ""
+        self.bestStageId = ""
         self.calc_cost()
-        self.flags = self.calc_flags()
+        self.flags = ""
+        self.need = 0
+        self.have = 0
 
     def get_stages(self):
         results = {}
@@ -154,16 +159,31 @@ class Item:
             else:
                 best_ap = math.inf
             if best_ap < self.bestAp:
-                self.bestAp = best_ap
-                self.bestStage = stage["stageId"]
+                self.bestAp = math.ceil(best_ap)
+                self.bestStage = stages[stage["stageId"]]["code"]
+                self.bestStageId = stage["stageId"]
         return None
 
-    def calc_flags(self):
-        flags = ""
-        return flags
+
+def create_inventory():
+    inv = Inventory()
+    return inv
 
 
-inventory = Inventory()
+def calc_flags():
+    for item in inventory.items.values():
+        if len(item.formula) > 0:
+            for i in item.formula["costs"]:
+                item.craftingAp += inventory.items[i["id"]].bestAp * i["count"]
+        if 0 < item.craftingAp < item.bestAp:
+            item.flags = "Crafting"
+        else:
+            item.flags = "Farming"
+    return None
+
+
+inventory = create_inventory()
+calc_flags()
 
 
 class OperatorState:
@@ -190,7 +210,8 @@ class OperatorState:
             if self.current.elite < elite == self.desired.elite:
                 self.calc_needs(0, self.desired.level - 1, elite)
         for elite in range(self.current.elite, self.desired.elite):
-            self.cost["4001"] = self.cost.get("4001", 0) + gameconst["evolveGoldCost"][self.operator.ear["rarity"]][elite]
+            self.cost["4001"] = self.cost.get("4001", 0) + gameconst["evolveGoldCost"][self.operator.ear["rarity"]][
+                elite]
             for i in self.return_results(elite + 1).items():
                 count = self.cost.get(i[0], 0)
                 self.cost[i[0]] = count + i[1]

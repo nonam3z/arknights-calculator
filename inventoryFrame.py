@@ -8,7 +8,7 @@ import mainWindow
 from PIL import Image, ImageTk
 
 
-def create_inventory():
+def parse_inventory():
     inv = ADP.inventory.items
     i = int(inv.__len__())
     j = math.ceil(i / 6)
@@ -23,7 +23,7 @@ class InventoryFrame(tk.Frame):
         self.grid(padx=5, pady=5, sticky="nsew")
         self.master = master
 
-        self.inv = create_inventory()
+        self.inv = parse_inventory()
 
         for c in range(6):
             self.columnconfigure(c, weight=1)

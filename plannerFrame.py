@@ -3,6 +3,8 @@ from tkinter import ttk
 from tkinter import *
 
 import inventoryFrame as iFrame
+import calculateFrame as cFrame
+import mainWindow
 import plannerPanels
 import ArknightsDataParser
 import win32clipboard
@@ -12,6 +14,9 @@ from PIL import Image, ImageTk
 
 
 class Planner(tk.Frame):
+
+    results = {}
+
     def __init__(self, master=None):
         super().__init__(master)
 
@@ -24,6 +29,7 @@ class Planner(tk.Frame):
         self.ear = 0
         self.allEarsList = {}
         self.list = {}
+        self.path = {}
 
         self.style = ttk.Style()
 
@@ -84,7 +90,7 @@ class Planner(tk.Frame):
         self.results.column("name", stretch=True, width=150)
         self.results.heading("name", text="Item", anchor="center")
         self.results.column("count", stretch=True, width=70)
-        self.results.heading("count", text="Count", anchor="center")
+        self.results.heading("count", text="Need", anchor="center")
         self.results.column("have", stretch=True, width=70)
         self.results.heading("have", text="Have", anchor="center")
         # self.style.configure("Treeview", rowheight=50)
@@ -96,19 +102,19 @@ class Planner(tk.Frame):
     def calculate_button(self):
         results = self.calculate()
         penguin_export = {}
-        json_data = {"@type":"@penguin-statistics/planner/config"}
+        json_data = {"@type": "@penguin-statistics/planner/config"}
         items_dict = {}
-        options = {"options":{"byProduct":"false", "requireExp":"true", "requireLmb":"true"}}
-        excludes = ["main_06-14","main_07-01","main_07-02","main_07-03","main_07-04","main_07-05",
-                                  "main_07-06","main_07-07","main_07-08","main_07-09","main_07-10","main_07-11",
-                                  "main_07-12","main_07-13","main_07-14","main_07-15","main_07-16","sub_07-1-1",
-                                  "sub_07-1-2","main_08-01","main_08-02","main_08-03","main_08-04","main_08-05",
-                                  "main_08-06","main_08-07","main_08-08","main_08-09","main_08-10","main_08-11",
-                                  "main_08-12","main_08-13","main_08-14","main_08-15","main_08-16","main_08-17"]
+        options = {"options": {"byProduct": "false", "requireExp": "true", "requireLmb": "true"}}
+        excludes = ["main_06-14", "main_07-01", "main_07-02", "main_07-03", "main_07-04", "main_07-05",
+                    "main_07-06", "main_07-07", "main_07-08", "main_07-09", "main_07-10", "main_07-11",
+                    "main_07-12", "main_07-13", "main_07-14", "main_07-15", "main_07-16", "sub_07-1-1",
+                    "sub_07-1-2", "main_08-01", "main_08-02", "main_08-03", "main_08-04", "main_08-05",
+                    "main_08-06", "main_08-07", "main_08-08", "main_08-09", "main_08-10", "main_08-11",
+                    "main_08-12", "main_08-13", "main_08-14", "main_08-15", "main_08-16", "main_08-17"]
         excludes_dict = {}
         items = []
         for i in results:
-            items.append({'id': i, 'need': results.get(i, 0), 'have':0})
+            items.append({'id': i, 'need': results.get(i, 0), 'have': 0})
         items_dict.setdefault("items", items)
         excludes_dict.setdefault("excludes", excludes)
         penguin_export.update(json_data)
@@ -120,7 +126,7 @@ class Planner(tk.Frame):
         win32clipboard.SetClipboardText(json.dumps(penguin_export))
         win32clipboard.CloseClipboard()
 
-    def calculate(self): # Расчет стоимости апгрейда выделенных в списке ушек.
+    def calculate(self):  # Расчет стоимости апгрейда выделенных в списке ушек.
         results = {}
         tpl = self.earsList.selection()
         for s in tpl:
@@ -180,6 +186,7 @@ class Planner(tk.Frame):
                                                              self.desiredStats.construct_op())
                 self.allEarsList.setdefault(operator.name)
                 self.allEarsList[operator.name] = operator
+        self.create_path_list()
 
     def create_upgrade_string(self, current, desired):
         results = ""
@@ -212,6 +219,7 @@ class Planner(tk.Frame):
             values = name.get('values')
             self.earsList.delete(s)
             self.allEarsList.pop(values[0])
+        self.create_path_list()
 
     def set_max_lvls(self, event):
         ear = ArknightsDataParser.Operator(self.selectOperator.get())
@@ -237,4 +245,17 @@ class Planner(tk.Frame):
         if len(skills) == 3:
             self.currentStats.selectSkill3.configure(state=NORMAL)
             self.desiredStats.selectSkill3.configure(state=NORMAL)
+
+    def create_path_list(self):
+        results = {}
+        tpl = self.allEarsList
+        for s in tpl:
+            ear = tpl.get(s)
+            items = ear.cost
+            if items:
+                for i in items.items():
+                    count = results.get(i[0], 0)
+                    results[i[0]] = count + i[1]
+        Planner.results = results
+        return None
 

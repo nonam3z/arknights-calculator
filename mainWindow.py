@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
+
+import calculateFrame
 import plannerFrame
 import inventoryFrame as iFrame
 import json
@@ -33,6 +35,8 @@ class Application(tk.Frame):
         self.tabs.add(self.planner, text="Planner")
         self.inventory = iFrame.InventoryFrame(self)
         self.tabs.add(self.inventory, text="Inventory Depot")
+        self.calculator = calculateFrame.CalculateFrame(self)
+        self.tabs.add(self.calculator, text="Path Calculator")
 
     def restore_data(self):
         if savedata:
@@ -49,5 +53,7 @@ class Application(tk.Frame):
                 self.planner.earsList.insert("", tk.END,
                                              values=(name, self.planner.create_upgrade_string(current, desired)),
                                              iid=iid)
+                self.planner.create_path_list()
+                self.calculator.update()
             for item in savedata["inventory"].values():
                 iFrame.InventoryFrame.frames[item["itemId"]].itemHave.set(int(item["have"]))

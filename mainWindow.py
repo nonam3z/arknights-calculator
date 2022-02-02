@@ -4,6 +4,7 @@ from tkinter import ttk
 import calculateFrame
 import plannerFrame
 import inventoryFrame as iFrame
+import farmingFrame
 import json
 import os
 import ArknightsDataParser
@@ -37,6 +38,8 @@ class Application(tk.Frame):
         self.tabs.add(self.inventory, text="Inventory Depot")
         self.calculator = calculateFrame.CalculateFrame(self)
         self.tabs.add(self.calculator, text="Path Calculator")
+        self.farming = farmingFrame.FarmingFrame(self)
+        self.tabs.add(self.farming, text="Farming Calculator")
 
     def restore_data(self):
         if savedata:

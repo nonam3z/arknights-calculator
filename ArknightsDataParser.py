@@ -1,7 +1,11 @@
 import json
 import math
+import urllib.request
 from urllib.request import urlretrieve
+from urllib.request import getproxies
 import os
+
+import requests
 
 os.makedirs("jsons", exist_ok=True)
 
@@ -18,7 +22,7 @@ def get_file_from_github(filename):
 
 
 def get_penguin_data():
-    repository = "https://penguin-stats.io/PenguinStats/api/v2/result/matrix?show_closed_zones=false&server=US"
+    repository = "https://penguin-stats.io/PenguinStats/api/v2/result/matrix.json?show_closed_zones=false&server=US"
     file = "jsons/materials.json"
     os.remove(file)
     open(file, 'w+')
@@ -26,6 +30,8 @@ def get_penguin_data():
 
 
 def update_script():
+    session = requests.session()
+    session.proxies = getproxies()
     print("Getting characters data...")
     get_file_from_github("character_table")
     print("Getting items data...")

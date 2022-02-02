@@ -13,6 +13,7 @@ from PIL import Image, ImageTk
 
 
 class CalculateFrame(tk.Frame):
+
     def __init__(self, master=None):
         super().__init__(master)
 
@@ -23,6 +24,7 @@ class CalculateFrame(tk.Frame):
 
         self.master = master
         self.item_list = {}
+        self.farming_data = {}
 
         self.button = tk.Button(self, text="Calculate Path", command=self.create_path)
         self.button.grid(column=0, row=0, sticky="ew")
@@ -57,11 +59,13 @@ class CalculateFrame(tk.Frame):
 
     def create_path(self):
         results = plannerFrame.Planner.results
+        self.farming_data.clear()
         for i in self.calculateFrame.get_children():
             self.calculateFrame.delete(i)
         if results:
             for i in results:
                 self.create_tree(i, results[i], "i000")
+
 
                 # if self.item_list[i].flags == "Farming":
                 #     self.calculateFrame.insert("", tk.END, iid=i, image=self.item_list[i].icon,
@@ -80,6 +84,9 @@ class CalculateFrame(tk.Frame):
     def create_tree(self, item, count, curr_iid):
         if curr_iid == "i000":
             if self.item_list[item].flags == "Farming":
+                if not self.farming_data.get(item):
+                    self.farming_data.setdefault(item, 0)
+                self.farming_data[item] += count
                 last_iid = self.calculateFrame.insert("", tk.END, image=self.item_list[item].icon,
                                                       values=(
                                                           self.item_list[item].name, count, self.item_list[item].have,
@@ -92,16 +99,23 @@ class CalculateFrame(tk.Frame):
                                                           "Crafting", "Workshop"))
                 for k in self.item_list[item].formula["costs"]:
                     if self.item_list[k["id"]].flags == "Farming":
+                        if not self.farming_data.get(item):
+                            self.farming_data.setdefault(item, 0)
+                        self.farming_data[item] += count * k["count"]
                         child_iid = self.calculateFrame.insert(parent=last_iid, index=tk.END,
                                                                image=self.item_list[k["id"]].icon,
                                                                values=(self.item_list[k["id"]].name, count * k["count"],
                                                                        self.item_list[k["id"]].have,
-                                                                       self.item_list[k["id"]].bestAp * k["count"],
+                                                                       self.item_list[k["id"]].bestAp * count * k[
+                                                                           "count"],
                                                                        self.item_list[k["id"]].bestStage))
                     if self.item_list[k["id"]].flags == "Crafting":
                         self.create_tree(k["id"], k["count"] * count, last_iid)
         else:
             if self.item_list[item].flags == "Farming":
+                if not self.farming_data.get(item):
+                    self.farming_data.setdefault(item, 0)
+                self.farming_data[item] += count
                 last_iid = self.calculateFrame.insert(parent=curr_iid, index=tk.END, image=self.item_list[item].icon,
                                                       values=(
                                                           self.item_list[item].name, count, self.item_list[item].have,
@@ -114,11 +128,19 @@ class CalculateFrame(tk.Frame):
                                                           "Crafting", "Workshop"))
                 for k in self.item_list[item].formula["costs"]:
                     if self.item_list[k["id"]].flags == "Farming":
+                        if not self.farming_data.get(item):
+                            self.farming_data.setdefault(item, 0)
+                        self.farming_data[item] += count * k["count"]
                         child_iid = self.calculateFrame.insert(parent=last_iid, index=tk.END,
                                                                image=self.item_list[k["id"]].icon,
                                                                values=(self.item_list[k["id"]].name, count * k["count"],
                                                                        self.item_list[k["id"]].have,
-                                                                       self.item_list[k["id"]].bestAp * k["count"],
+                                                                       self.item_list[k["id"]].bestAp * count * k[
+                                                                           "count"],
                                                                        self.item_list[k["id"]].bestStage))
                     if self.item_list[k["id"]].flags == "Crafting":
                         self.create_tree(k["id"], k["count"] * count, last_iid)
+
+    def call_farming_data(self):
+        data = self.farming_data
+        return data

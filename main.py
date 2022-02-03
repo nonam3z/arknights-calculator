@@ -39,7 +39,8 @@ def save_data():
     for items in iFrame.InventoryFrame.frames.values():
         data["inventory"][items.itemId] = {}
         data["inventory"][items.itemId]["itemId"] = items.itemId
-        data["inventory"][items.itemId]["have"] = items.itemHave.get()
+        if items.itemHave.get():
+            data["inventory"][items.itemId]["have"] = items.itemHave.get()
     if os.path.exists("savedata.json"):
         os.remove("savedata.json")
     file = open("savedata.json", 'w+')

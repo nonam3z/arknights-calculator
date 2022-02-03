@@ -44,6 +44,8 @@ class FarmingFrame(tk.Frame):
         self.farmingFrame.column("stage", stretch=True, width=150)
         self.farmingFrame.heading("stage", text="Stage", anchor="center")
 
+        self.create_item_list()
+
     def create_item_list(self):
         self.item_list = ADP.inventory.items
         for item in self.item_list.values():
@@ -55,7 +57,9 @@ class FarmingFrame(tk.Frame):
         return None
 
     def create_path(self):
-        results = cFrame.CalculateFrame.call_farming_data()
+        results = self.master.calculator.farming_data
+        for i in self.farmingFrame.get_children():
+            self.farmingFrame.delete(i)
         if results:
             for item in results:
                 self.farmingFrame.insert("", tk.END, image=self.item_list[item].icon,

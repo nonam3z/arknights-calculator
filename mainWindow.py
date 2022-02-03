@@ -20,6 +20,7 @@ if os.path.exists("savedata.json"):
 class Application(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
+
         self.master = master
         self.winfo_toplevel().title("Arknights Calculator")
         self.columnconfigure(0, weight=1)

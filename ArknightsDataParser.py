@@ -9,8 +9,6 @@ import requests
 
 os.makedirs("jsons", exist_ok=True)
 
-import inventoryFrame as iFrame
-
 
 def get_file_from_github(filename):
     repository = "https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/en_US/gamedata/excel/"
@@ -165,7 +163,7 @@ class Item:
             else:
                 best_ap = math.inf
             if best_ap < self.bestAp:
-                self.bestAp = math.ceil(best_ap)
+                self.bestAp = math.trunc(best_ap)
                 self.bestStage = stages[stage["stageId"]]["code"]
                 self.bestStageId = stage["stageId"]
         return None

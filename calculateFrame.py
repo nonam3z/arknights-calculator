@@ -2,7 +2,9 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import *
 
+import farmingFrame as fFrame
 import inventoryFrame as iFrame
+import mainWindow
 import plannerFrame
 import plannerPanels
 import ArknightsDataParser as ADP
@@ -66,7 +68,6 @@ class CalculateFrame(tk.Frame):
             for i in results:
                 self.create_tree(i, results[i], "i000")
 
-
                 # if self.item_list[i].flags == "Farming":
                 #     self.calculateFrame.insert("", tk.END, iid=i, image=self.item_list[i].icon,
                 #                                values=(self.item_list[i].name, results[i], self.item_list[i].have,
@@ -99,15 +100,14 @@ class CalculateFrame(tk.Frame):
                                                           "Crafting", "Workshop"))
                 for k in self.item_list[item].formula["costs"]:
                     if self.item_list[k["id"]].flags == "Farming":
-                        if not self.farming_data.get(item):
-                            self.farming_data.setdefault(item, 0)
-                        self.farming_data[item] += count * k["count"]
+                        if not self.farming_data.get(k["id"]):
+                            self.farming_data.setdefault(k["id"], 0)
+                        self.farming_data[k["id"]] += count * k["count"]
                         child_iid = self.calculateFrame.insert(parent=last_iid, index=tk.END,
                                                                image=self.item_list[k["id"]].icon,
                                                                values=(self.item_list[k["id"]].name, count * k["count"],
                                                                        self.item_list[k["id"]].have,
-                                                                       self.item_list[k["id"]].bestAp * count * k[
-                                                                           "count"],
+                                                                       self.item_list[k["id"]].bestAp * count * k["count"],
                                                                        self.item_list[k["id"]].bestStage))
                     if self.item_list[k["id"]].flags == "Crafting":
                         self.create_tree(k["id"], k["count"] * count, last_iid)
@@ -128,19 +128,14 @@ class CalculateFrame(tk.Frame):
                                                           "Crafting", "Workshop"))
                 for k in self.item_list[item].formula["costs"]:
                     if self.item_list[k["id"]].flags == "Farming":
-                        if not self.farming_data.get(item):
-                            self.farming_data.setdefault(item, 0)
-                        self.farming_data[item] += count * k["count"]
+                        if not self.farming_data.get(k["id"]):
+                            self.farming_data.setdefault(k["id"], 0)
+                        self.farming_data[k["id"]] += count * k["count"]
                         child_iid = self.calculateFrame.insert(parent=last_iid, index=tk.END,
                                                                image=self.item_list[k["id"]].icon,
                                                                values=(self.item_list[k["id"]].name, count * k["count"],
                                                                        self.item_list[k["id"]].have,
-                                                                       self.item_list[k["id"]].bestAp * count * k[
-                                                                           "count"],
+                                                                       self.item_list[k["id"]].bestAp * count * k["count"],
                                                                        self.item_list[k["id"]].bestStage))
                     if self.item_list[k["id"]].flags == "Crafting":
                         self.create_tree(k["id"], k["count"] * count, last_iid)
-
-    def call_farming_data(self):
-        data = self.farming_data
-        return data

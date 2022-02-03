@@ -20,6 +20,7 @@ class InventoryFrame(tk.Frame):
 
     def __init__(self, master=None):
         super().__init__(master)
+
         self.grid(padx=5, pady=5, sticky="nsew")
         self.master = master
 

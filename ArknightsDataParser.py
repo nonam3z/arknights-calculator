@@ -110,7 +110,7 @@ class Inventory:
     def __init__(self):
         self.items = {}
         for item in items["items"].values():
-            if item["itemId"] == "4001" or item["itemId"] == "5001":
+            if item["itemId"] in ["4001", "5001", "32001", "4006"]:
                 self.items[item["itemId"]] = Item(item["itemId"])
             if item["classifyType"] == "MATERIAL" and item["itemType"] == "MATERIAL" and not item["obtainApproach"]:
                 self.items[item["itemId"]] = Item(item["itemId"])
@@ -133,6 +133,9 @@ class Item:
             if item["buildingProductList"][0]["roomType"] == "WORKSHOP":
                 self.itemCraftingId = item["buildingProductList"][0]["formulaId"]
                 self.formula = formulas["workshopFormulas"][self.itemCraftingId]
+            if item["buildingProductList"][0]["roomType"] == "MANUFACTURE":
+                self.itemCraftingId = item["buildingProductList"][0]["formulaId"]
+                self.formula = formulas["manufactFormulas"][self.itemCraftingId]
         self.stages = self.get_stages()
         self.bestAp = math.inf
         self.craftingAp = 0
@@ -163,7 +166,7 @@ class Item:
             else:
                 best_ap = math.inf
             if best_ap < self.bestAp:
-                self.bestAp = math.trunc(best_ap)
+                self.bestAp = best_ap
                 self.bestStage = stages[stage["stageId"]]["code"]
                 self.bestStageId = stage["stageId"]
         return None
@@ -174,20 +177,35 @@ def create_inventory():
     return inv
 
 
-def calc_flags():
-    for item in inventory.items.values():
+def calc_flags(inv):
+    for item in inv.items.values():
         if len(item.formula) > 0:
             for i in item.formula["costs"]:
-                item.craftingAp += inventory.items[i["id"]].bestAp * i["count"]
+                item.craftingAp += inv.items[i["id"]].bestAp * i["count"]
         if 0 < item.craftingAp < item.bestAp:
             item.flags = "Crafting"
         else:
             item.flags = "Farming"
-    return None
+    return inv
 
 
-inventory = create_inventory()
-calc_flags()
+def add_some_shitty_formulas(inv):
+    for item in inv.items.values():
+        if item.itemId == "4001":
+            item.bestAp = 0.004
+            item.bestStage = "CE-5"
+            item.bestStageId = "wk_melee_5"
+        elif item.itemId == "5001":
+            pass
+        elif item.itemId == "32001":
+            item.bestAp = 1350
+            item.formula = {"costs": []}
+            item.formula["costs"].append({"id":"4006", "count": 90, "type": "MATERIAL"})
+        elif item.itemId == "4006":
+            item.bestAp = 1.5
+            item.bestStage = "AP-5"
+            item.bestStageId = "wk_toxic_5"
+    return inv
 
 
 class OperatorState:
@@ -279,3 +297,9 @@ class Stats:
         self.skill1 = skill1
         self.skill2 = skill2
         self.skill3 = skill3
+
+
+inventory = create_inventory()
+inventory = add_some_shitty_formulas(inventory)
+inventory = calc_flags(inventory)
+pass

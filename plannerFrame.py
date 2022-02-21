@@ -100,6 +100,11 @@ class Planner(tk.Frame):
         self.set_max_lvls("")
 
     def calculate_button(self):
+        """
+        Собирает результаты расчетов для поушкивания и упаковывает их в словарик.
+        Добавляет в словарик ограничения по зонам, а так же параметры конфигурации для PStats.
+        Словарик в дальнейшем копируется для использования в Penguin Statistics (импорт значений для фарма).
+        """
         results = self.calculate()
         penguin_export = {}
         json_data = {"@type": "@penguin-statistics/planner/config"}
@@ -126,7 +131,12 @@ class Planner(tk.Frame):
         win32clipboard.SetClipboardText(json.dumps(penguin_export))
         win32clipboard.CloseClipboard()
 
-    def calculate(self):  # Расчет стоимости апгрейда выделенных в списке ушек.
+    def calculate(self):
+        """
+        Расчет стоимости апгрейда выделенных в списке ушек.
+        После расчетов отправляет результат в другие фреймы.
+        :return: Возвращает результаты расчетов в виде словарика из "id: count".
+        """
         results = {}
         tpl = self.earsList.selection()
         for s in tpl:
@@ -142,9 +152,14 @@ class Planner(tk.Frame):
                 for i in items.items():
                     count = results.get(i[0], 0)
                     results[i[0]] = count + i[1]
+        self.master.calculator.create_path(results)
         return results
 
-    def create_results_list(self, event):  # Отображение списка результатов.
+    def create_results_list(self, event):
+        """
+        Отображение результатов в фрейме results в виде списка.
+        :param event: Принимает на вход event.
+        """
         results = self.calculate()
         for l in results:
             self.list[l] = {}
@@ -165,6 +180,9 @@ class Planner(tk.Frame):
                                     values=(self.list[i]["name"], self.list[i]["need"], self.list[i]["have"]))
 
     def add_ear_to_list(self):
+        """
+        По нажатию кнопки Add Operator добавляет ушку в список на прокачку и в словарик объектов с ушками на прокачку.
+        """
         earlist_copy = self.allEarsList.copy()
         name = self.selectOperator.get()
         results = self.create_upgrade_string(self.currentStats.construct_op(), self.desiredStats.construct_op())
@@ -186,9 +204,15 @@ class Planner(tk.Frame):
                                                              self.desiredStats.construct_op())
                 self.allEarsList.setdefault(operator.name)
                 self.allEarsList[operator.name] = operator
-        self.create_path_list()
+        # self.create_path_list()
 
     def create_upgrade_string(self, current, desired):
+        """
+        Просто создает сокращенную строчку для вывода параметров прокачки в табличку с ушками.
+        :param current: Принимает объект с текущими статами ушки.
+        :param desired: Принимает объект с желаемыми статами ушки.
+        :return: Возвращает сокращенную строчку для вывода в табличку с ушками.
+        """
         results = ""
         if int(current.elite) < int(desired.elite):
             results += (str(current.elite) + "e" + str(current.level) + " >>> "
@@ -205,13 +229,10 @@ class Planner(tk.Frame):
             results += ("S3(" + str(current.skill3) + " to " + str(desired.skill3) + "); ")
         return results
 
-        # e1 = str(operator.current.elite)
-        # e2 = str(operator.desired.elite)
-        # lvl1 = str(operator.current.level)
-        # lvl2 = str(operator.desired.level)
-        # self.earsList.insert(tk.END, str(operator.name + ": " + e1 + "e" + lvl1 + " >> " + e2 + "e" + lvl2))
-
     def del_ear_from_list(self):
+        """
+        По нажатию кнопки Delete Operator удаляет ушку из таблички ушек и из словарика ушек.
+        """
         for i in self.results.get_children():
             self.results.delete(i)
         for s in self.earsList.selection():
@@ -219,9 +240,13 @@ class Planner(tk.Frame):
             values = name.get('values')
             self.earsList.delete(s)
             self.allEarsList.pop(values[0])
-        self.create_path_list()
+        # self.create_path_list()
 
     def set_max_lvls(self, event):
+        """
+        Выполняет установку ограничений для полей ввода параметров ушки.
+        :param event: Принимает на вход event.
+        """
         ear = ArknightsDataParser.Operator(self.selectOperator.get())
         self.currentStats.clear_spinboxes()
         self.desiredStats.clear_spinboxes()
@@ -230,6 +255,10 @@ class Planner(tk.Frame):
         self.skills_counter(ear.ear["skills"])
 
     def skills_counter(self, skills):
+        """
+        Управляет работой полей ввода, отключая ненужные в зависимости от редкости ушки.
+        :param skills: Принимает на вход массив skills ушки, рассчитывая на его основе количество навыков ушки.
+        """
         self.currentStats.selectSkill1.configure(state=DISABLED)
         self.currentStats.selectSkill2.configure(state=DISABLED)
         self.currentStats.selectSkill3.configure(state=DISABLED)
@@ -245,17 +274,3 @@ class Planner(tk.Frame):
         if len(skills) == 3:
             self.currentStats.selectSkill3.configure(state=NORMAL)
             self.desiredStats.selectSkill3.configure(state=NORMAL)
-
-    def create_path_list(self):
-        results = {}
-        tpl = self.allEarsList
-        for s in tpl:
-            ear = tpl.get(s)
-            items = ear.cost
-            if items:
-                for i in items.items():
-                    count = results.get(i[0], 0)
-                    results[i[0]] = count + i[1]
-        Planner.results = results
-        return None
-

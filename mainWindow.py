@@ -39,8 +39,8 @@ class Application(tk.Frame):
         self.tabs.add(self.inventory, text="Inventory Depot")
         self.calculator = calculateFrame.CalculateFrame(self)
         self.tabs.add(self.calculator, text="Path Calculator")
-        self.farming = farmingFrame.FarmingFrame(self)
-        self.tabs.add(self.farming, text="Farming Calculator")
+        # self.farming = farmingFrame.FarmingFrame(self)
+        # self.tabs.add(self.farming, text="Farming Calculator")
 
     def restore_data(self):
         if savedata:
@@ -57,7 +57,7 @@ class Application(tk.Frame):
                 self.planner.earsList.insert("", tk.END,
                                              values=(name, self.planner.create_upgrade_string(current, desired)),
                                              iid=iid)
-                self.planner.create_path_list()
+                # self.planner.create_path_list()
                 self.calculator.update()
             for item in savedata["inventory"].values():
                 iFrame.InventoryFrame.frames[item["itemId"]].itemHave.set(int(item["have"]))

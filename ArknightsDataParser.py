@@ -11,6 +11,10 @@ os.makedirs("jsons", exist_ok=True)
 
 
 def get_file_from_github(filename):
+    """
+    Метод для получения файлов из репозитория github.
+    :param filename: Принимает на вход имя файла.
+    """
     repository = "https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/en_US/gamedata/excel/"
     data = (repository + filename + ".json")
     file = ("jsons/" + filename + ".json")
@@ -20,6 +24,10 @@ def get_file_from_github(filename):
 
 
 def get_penguin_data():
+    """
+    Метод для получения матрицы стоимости и частоты выпадения материалов с Penguin Statistics.
+    В Крыму не работает, поэтому проверить его работу не могу.
+    """
     repository = "https://penguin-stats.io/PenguinStats/api/v2/result/matrix.json?show_closed_zones=false&server=US"
     file = "jsons/materials.json"
     os.remove(file)
@@ -28,6 +36,9 @@ def get_penguin_data():
 
 
 def update_script():
+    """
+    Создание\\обновление базы данных для работы программы.
+    """
     session = requests.session()
     session.proxies = getproxies()
     print("Getting characters data...")
@@ -46,7 +57,7 @@ def update_script():
 
 # update_script()
 
-
+# Создание набора глобальных переменных для работы программы.
 ears = json.load(open("jsons/character_table.json", encoding='utf-8'))
 items = json.load(open("jsons/item_table.json", encoding='utf-8'))
 formulas = json.load(open("jsons/building_data.json", encoding='utf-8'))
@@ -58,6 +69,10 @@ stages = stages["stages"]
 
 
 def return_list_of_ears():
+    """
+    Создание списка ушек для работы основного фрейма.
+    :return: Возращает список имен ушек в виде массива.
+    """
     earlist = []
     for ear in ears.values():
         if ear["displayNumber"]:

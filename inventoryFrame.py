@@ -8,7 +8,7 @@ import mainWindow
 from PIL import Image, ImageTk
 
 
-def parse_inventory():
+def parse_inventory():  # Парсим инвентарь, рассчитываем размеры для матрицы фреймов для отрисовки инвентаря.
     inv = ADP.inventory.items
     i = int(inv.__len__())
     j = math.ceil(i / 6)

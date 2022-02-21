@@ -39,6 +39,10 @@ class CalcPanel(tk.Frame):
         self.selectSkill3.insert(0, "1")
 
     def construct_op(self):
+        """
+        Создаем объект-ушку с заданными параметрами на прокачку.
+        :return: Возвращает ушку как объект с параметрами для прокачки.
+        """
         elite = self.selectElite.get()
         level = self.selectLvl.get()
         skill1 = self.selectSkill1.get()
@@ -47,6 +51,9 @@ class CalcPanel(tk.Frame):
         return ArknightsDataParser.Stats(int(elite), int(level), int(skill1), int(skill2), int(skill3))
 
     def on_update(self):
+        """
+        Обновляет фрейм, задавая ограничения полям для ввода на основе выбранной ушки.
+        """
         self.ear = ArknightsDataParser.Operator(self.master.selectOperator.get())
         self.selectElite["to"] = len(self.ear.ear["phases"]) - 1
         if self.selectElite["to"] <= int(self.selectElite.get()):
@@ -61,6 +68,10 @@ class CalcPanel(tk.Frame):
         self.selectSkill3["to"] = self.ear.skill_lvl(self.selectElite.get())
 
     def sync_spinbox(self, sbvalue):
+        """
+        Синхронизирует ввод для полей, отвещающих за уровни навыков ушки.
+        :param sbvalue:
+        """
         if int(sbvalue) <= 7:
             self.selectSkill1.delete(0, 9)
             self.selectSkill1.insert(0, sbvalue)
@@ -70,6 +81,10 @@ class CalcPanel(tk.Frame):
             self.selectSkill3.insert(0, sbvalue)
 
     def on_reset(self, event):
+        """
+        Сбрасывает поля ввода при изменении уровня элитки ушки.
+        :param event: Принимает на вход event.
+        """
         self.on_update()
         if int(self.selectLvl.get()) > self.selectLvl["to"]:
             self.selectLvl.delete(0, 9)
@@ -83,6 +98,9 @@ class CalcPanel(tk.Frame):
             self.selectSkill3.insert(0, self.selectSkill1["to"])
 
     def clear_spinboxes(self):
+        """
+        Очищает все поля, сбрасывая их к изначальным значениям.
+        """
         self.selectElite.delete(0, 9)
         self.selectElite.insert(0, 0)
         self.selectLvl.delete(0, 9)

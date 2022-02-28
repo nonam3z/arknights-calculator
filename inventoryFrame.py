@@ -57,3 +57,8 @@ class InventoryFrame(tk.Frame):
 
         for frame in InventoryFrame.frames.values():
             frame.tkraise()
+
+    def clear_inventory(self):
+        for frame in InventoryFrame.frames.values():
+            frame.itemHave.set(0)
+        return None

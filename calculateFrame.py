@@ -48,8 +48,8 @@ class CalculateFrame(tk.Frame):
         self.calculateFrame.heading("runs", text="Runs", anchor="center")
         self.calculateFrame.column("stage", stretch=True, width=150)
         self.calculateFrame.heading("stage", text="Stage", anchor="center")
-        self.calculateFrame.tag_configure('comp', background='yellow')
-        self.calculateFrame.tag_configure('farm', background='red')
+        self.calculateFrame.tag_configure('comp', background='Yellow')
+        self.calculateFrame.tag_configure('farm', background='Red')
 
         self.create_item_list()
 

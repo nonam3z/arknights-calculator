@@ -59,7 +59,7 @@ class Planner(tk.Frame):
         self.rightButtonsFrame.grid(column=1, row=2, sticky="ew", pady=(6, 0), padx=(3, 0))
         self.rightButtonsFrame.columnconfigure(0, weight=1)
 
-        self.buttonCalculate = tk.Button(self.rightButtonsFrame, text="Calculate", command=self.calculate_button)
+        self.buttonCalculate = tk.Button(self.rightButtonsFrame, text="Create Export to Penguin", command=self.calculate_button)
         self.buttonCalculate.grid(column=0, row=0, sticky="ew")
 
         self.rightFrame = tk.Frame(self)

@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter import messagebox
 
 import calculateFrame
 import plannerFrame
@@ -39,8 +40,30 @@ class Application(tk.Frame):
         self.tabs.add(self.inventory, text="Inventory Depot")
         self.calculator = calculateFrame.CalculateFrame(self)
         self.tabs.add(self.calculator, text="Path Calculator")
-        # self.farming = farmingFrame.FarmingFrame(self)
-        # self.tabs.add(self.farming, text="Farming Calculator")
+        self.farming = farmingFrame.FarmingFrame(self)
+        self.tabs.add(self.farming, text="Farming Calculator")
+
+        self.menu = tk.Menu(self, tearoff=False)
+        self.master.config(menu=self.menu)
+
+        self.settings = tk.Menu(self.menu, tearoff=False)
+        self.settings.add_command(label="Clear Inventory", command=self.check_error_typing)
+
+        self.menu.add_cascade(label="Settings", menu=self.settings)
+        self.menu.add_command(label="About", command=self.about_message)
+
+    def about_message(self):
+        messagebox.showinfo(title="About", message="Pretty simple Arknights Farming Calculator. \n"
+                                                   "Created by nonam3z. \n"
+                                                   "Only for educational purposes.")
+
+    def check_error_typing(self):
+        checkBox = messagebox.askquestion(title="Clearing Inventory", message="Are you sure? "
+                                                                              "This will remove all data from inventory "
+                                                                              "tab! \nThis action cannot be undone.")
+        if checkBox == "yes":
+            self.inventory.clear_inventory()
+        return None
 
     def restore_data(self):
         if savedata:

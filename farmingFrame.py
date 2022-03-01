@@ -1,16 +1,12 @@
-import tkinter as tk
-from tkinter import ttk
-from tkinter import *
-
-import inventoryFrame as iFrame
-import plannerFrame
-import plannerPanels
-import ArknightsDataParser as ADP
-import calculateFrame as cFrame
-import win32clipboard
-import json
 import math
+import tkinter as tk
+from tkinter import *
+from tkinter import ttk
+
 from PIL import Image, ImageTk
+
+import ArknightsDataParser as ADP
+import inventoryFrame as iFrame
 
 
 class FarmingFrame(tk.Frame):

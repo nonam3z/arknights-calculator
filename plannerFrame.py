@@ -1,20 +1,17 @@
-import tkinter as tk
-from tkinter import ttk
-from tkinter import *
-
-import inventoryFrame as iFrame
-import calculateFrame as cFrame
-import mainWindow
-import plannerPanels
-import ArknightsDataParser
-import win32clipboard
 import json
-import math
+import tkinter as tk
+from tkinter import *
+from tkinter import ttk
+
+import win32clipboard
 from PIL import Image, ImageTk
+
+import ArknightsDataParser
+import inventoryFrame as iFrame
+import plannerPanels
 
 
 class Planner(tk.Frame):
-
     results = {}
 
     def __init__(self, master=None):
@@ -59,7 +56,8 @@ class Planner(tk.Frame):
         self.rightButtonsFrame.grid(column=1, row=2, sticky="ew", pady=(6, 0), padx=(3, 0))
         self.rightButtonsFrame.columnconfigure(0, weight=1)
 
-        self.buttonCalculate = tk.Button(self.rightButtonsFrame, text="Create Export to Penguin", command=self.calculate_button)
+        self.buttonCalculate = tk.Button(self.rightButtonsFrame, text="Create Export to Penguin",
+                                         command=self.calculate_button)
         self.buttonCalculate.grid(column=0, row=0, sticky="ew")
 
         self.rightFrame = tk.Frame(self)
@@ -155,23 +153,24 @@ class Planner(tk.Frame):
         self.master.calculator.create_path(results)
         return results
 
+    # noinspection PyUnusedLocal
     def create_results_list(self, event):
         """
         Отображение результатов в фрейме results в виде списка.
         :param event: Принимает на вход event.
         """
         results = self.calculate()
-        for l in results:
-            self.list[l] = {}
-            self.list[l]["itemId"] = l
-            self.list[l]["name"] = ArknightsDataParser.Item(l).name
-            self.list[l]["iconId"] = ArknightsDataParser.Item(l).iconId
-            icon = Image.open("items/" + self.list[l]["iconId"] + ".png")
+        for data in results:
+            self.list[data] = {}
+            self.list[data]["itemId"] = data
+            self.list[data]["name"] = ArknightsDataParser.Item(data).name
+            self.list[data]["iconId"] = ArknightsDataParser.Item(data).iconId
+            icon = Image.open("items/" + self.list[data]["iconId"] + ".png")
             icon.thumbnail((20, 20), Image.ANTIALIAS)
             icon = ImageTk.PhotoImage(icon)
-            self.list[l]["icon"] = icon
-            self.list[l]["need"] = results.get(l)
-            self.list[l]["have"] = iFrame.InventoryFrame.frames[l].itemHave.get()
+            self.list[data]["icon"] = icon
+            self.list[data]["need"] = results.get(data)
+            self.list[data]["have"] = iFrame.InventoryFrame.frames[data].itemHave.get()
         for i in self.results.get_children():
             self.results.delete(i)
         if results:
@@ -206,7 +205,8 @@ class Planner(tk.Frame):
                 self.allEarsList[operator.name] = operator
         # self.create_path_list()
 
-    def create_upgrade_string(self, current, desired):
+    @staticmethod
+    def create_upgrade_string(current, desired):
         """
         Просто создает сокращенную строчку для вывода параметров прокачки в табличку с ушками.
         :param current: Принимает объект с текущими статами ушки.
@@ -242,6 +242,7 @@ class Planner(tk.Frame):
             self.allEarsList.pop(values[0])
         # self.create_path_list()
 
+    # noinspection PyUnusedLocal
     def set_max_lvls(self, event):
         """
         Выполняет установку ограничений для полей ввода параметров ушки.

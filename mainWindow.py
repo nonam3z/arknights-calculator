@@ -1,14 +1,14 @@
-import tkinter as tk
-from tkinter import ttk
-from tkinter import messagebox
-
-import calculateFrame
-import plannerFrame
-import inventoryFrame as iFrame
-import farmingFrame
 import json
 import os
+import tkinter as tk
+from tkinter import messagebox
+from tkinter import ttk
+
 import ArknightsDataParser
+import calculateFrame
+import farmingFrame
+import inventoryFrame as iFrame
+import plannerFrame
 
 savedata = {}
 
@@ -52,7 +52,8 @@ class Application(tk.Frame):
         self.menu.add_cascade(label="Settings", menu=self.settings)
         self.menu.add_command(label="About", command=self.about_message)
 
-    def about_message(self):
+    @staticmethod
+    def about_message():
         messagebox.showinfo(title="About", message="Pretty simple Arknights Farming Calculator. \n"
                                                    "Created by nonam3z. \n"
                                                    "Only for educational purposes.")

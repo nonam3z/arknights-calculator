@@ -1,17 +1,12 @@
-import tkinter as tk
-from tkinter import ttk
-from tkinter import *
-
-import farmingFrame as fFrame
-import inventoryFrame as iFrame
-import mainWindow
-import plannerFrame
-import plannerPanels
-import ArknightsDataParser as ADP
-import win32clipboard
-import json
 import math
+import tkinter as tk
+from tkinter import *
+from tkinter import ttk
+
 from PIL import Image, ImageTk
+
+import ArknightsDataParser as ADP
+import inventoryFrame as iFrame
 
 
 class CalculateFrame(tk.Frame):
@@ -145,7 +140,6 @@ class CalculateFrame(tk.Frame):
         if results:
             for item in results:
                 if item not in ignore:
-                    have = iFrame.InventoryFrame.frames[item].itemHave.get()
                     stage = self.item_list[item].bestStageId
                     runs = math.ceil((self.item_list[item].bestAp * results[item]) / float(
                         stages[stage]["apCost"]))

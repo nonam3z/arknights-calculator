@@ -1,9 +1,8 @@
 import json
 import math
-import urllib.request
-from urllib.request import urlretrieve
-from urllib.request import getproxies
 import os
+from urllib.request import getproxies
+from urllib.request import urlretrieve
 
 import requests
 
@@ -83,7 +82,6 @@ def return_list_of_ears():
 
 class Operator:
     def __init__(self, name):
-        ear = None
         for ear in ears.values():
             if ear["name"] == name:
                 self.ear = ear
@@ -215,7 +213,7 @@ def add_some_shitty_formulas(inv):
         elif item.itemId == "32001":
             item.bestAp = 1350
             item.formula = {"costs": []}
-            item.formula["costs"].append({"id":"4006", "count": 90, "type": "MATERIAL"})
+            item.formula["costs"].append({"id": "4006", "count": 90, "type": "MATERIAL"})
         elif item.itemId == "4006":
             item.bestAp = 1.5
             item.bestStage = "AP-5"

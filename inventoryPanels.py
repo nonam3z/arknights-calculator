@@ -28,6 +28,3 @@ class InvPanel(tk.Frame):
 
         # self.itemNeed = ttk.Spinbox(self)
         # self.itemNeed.grid(row=2, column=1)
-
-
-None

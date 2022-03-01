@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+
 import ArknightsDataParser
 
 
@@ -26,15 +27,18 @@ class CalcPanel(tk.Frame):
         self.selectLvl.grid(column=1, row=1, sticky="ew")
         self.selectLvl.insert(0, "1")
 
-        self.selectSkill1 = ttk.Spinbox(self, from_=1, to=10, command=lambda:self.sync_spinbox(self.selectSkill1.get()))
+        self.selectSkill1 = ttk.Spinbox(self, from_=1, to=10,
+                                        command=lambda: self.sync_spinbox(self.selectSkill1.get()))
         self.selectSkill1.grid(column=1, row=2, sticky="ew")
         self.selectSkill1.insert(0, "1")
 
-        self.selectSkill2 = ttk.Spinbox(self, from_=1, to=10, command=lambda:self.sync_spinbox(self.selectSkill2.get()))
+        self.selectSkill2 = ttk.Spinbox(self, from_=1, to=10,
+                                        command=lambda: self.sync_spinbox(self.selectSkill2.get()))
         self.selectSkill2.grid(column=1, row=3, sticky="ew")
         self.selectSkill2.insert(0, "1")
 
-        self.selectSkill3 = ttk.Spinbox(self, from_=1, to=10, command=lambda:self.sync_spinbox(self.selectSkill3.get()))
+        self.selectSkill3 = ttk.Spinbox(self, from_=1, to=10,
+                                        command=lambda: self.sync_spinbox(self.selectSkill3.get()))
         self.selectSkill3.grid(column=1, row=4, sticky="ew")
         self.selectSkill3.insert(0, "1")
 
@@ -80,6 +84,7 @@ class CalcPanel(tk.Frame):
             self.selectSkill3.delete(0, 9)
             self.selectSkill3.insert(0, sbvalue)
 
+    # noinspection PyUnusedLocal
     def on_reset(self, event):
         """
         Сбрасывает поля ввода при изменении уровня элитки ушки.
@@ -102,15 +107,15 @@ class CalcPanel(tk.Frame):
         Очищает все поля, сбрасывая их к изначальным значениям.
         """
         self.selectElite.delete(0, 9)
-        self.selectElite.insert(0, 0)
+        self.selectElite.insert(0, "0")
         self.selectLvl.delete(0, 9)
-        self.selectLvl.insert(0, 1)
+        self.selectLvl.insert(0, "1")
         self.selectSkill1.delete(0, 9)
         self.selectSkill2.delete(0, 9)
         self.selectSkill3.delete(0, 9)
-        self.selectSkill1.insert(0, 1)
-        self.selectSkill2.insert(0, 1)
-        self.selectSkill3.insert(0, 1)
+        self.selectSkill1.insert(0, "1")
+        self.selectSkill2.insert(0, "1")
+        self.selectSkill3.insert(0, "1")
 
     def callback(self):
         self.on_reset("")

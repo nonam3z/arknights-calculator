@@ -1,11 +1,11 @@
+import math
 import tkinter as tk
-from tkinter import ttk
 from tkinter import *
+
+from PIL import Image, ImageTk
+
 import ArknightsDataParser as ADP
 import inventoryPanels
-import math
-import mainWindow
-from PIL import Image, ImageTk
 
 
 def parse_inventory():  # Парсим инвентарь, рассчитываем размеры для матрицы фреймов для отрисовки инвентаря.
@@ -58,7 +58,8 @@ class InventoryFrame(tk.Frame):
         for frame in InventoryFrame.frames.values():
             frame.tkraise()
 
-    def clear_inventory(self):
+    @staticmethod
+    def clear_inventory():
         for frame in InventoryFrame.frames.values():
             frame.itemHave.set(0)
         return None

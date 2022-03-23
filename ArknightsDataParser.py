@@ -6,15 +6,14 @@ from urllib.request import urlretrieve
 
 import requests
 
-os.makedirs("jsons", exist_ok=True)
 
-
-def get_file_from_github(filename):
+def get_file_from_github(filename, rep):
     """
     Метод для получения файлов из репозитория github.
     :param filename: Принимает на вход имя файла.
+    :param rep: Принимает на вход репозиторий.
     """
-    repository = "https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/en_US/gamedata/excel/"
+    repository = "https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/" + str(rep) + "/gamedata/excel/"
     data = (repository + filename + ".json")
     file = ("jsons/" + filename + ".json")
     os.remove(file)
@@ -34,27 +33,26 @@ def get_penguin_data():
     urlretrieve(repository, file)
 
 
-def update_script():
+def update_script(rep):
     """
     Создание\\обновление базы данных для работы программы.
     """
+    os.makedirs("jsons", exist_ok=True)
     session = requests.session()
     session.proxies = getproxies()
     print("Getting characters data...")
-    get_file_from_github("character_table")
+    get_file_from_github("character_table", rep)
     print("Getting items data...")
-    get_file_from_github("item_table")
+    get_file_from_github("item_table", rep)
     print("Getting formulas data...")
-    get_file_from_github("building_data")
+    get_file_from_github("building_data", rep)
     print("Getting game constants...")
-    get_file_from_github("gamedata_const")
+    get_file_from_github("gamedata_const", rep)
     print("Getting stages data...")
-    get_file_from_github("stage_table")
+    get_file_from_github("stage_table", rep)
     print("Download complete!")
     # get_penguin_data()
 
-
-# update_script()
 
 # Создание набора глобальных переменных для работы программы.
 ears = json.load(open("jsons/character_table.json", encoding='utf-8'))
@@ -62,9 +60,18 @@ items = json.load(open("jsons/item_table.json", encoding='utf-8'))
 formulas = json.load(open("jsons/building_data.json", encoding='utf-8'))
 gameconst = json.load(open("jsons/gamedata_const.json", encoding='utf-8'))
 materials = json.load(open("jsons/materials.json", encoding='utf-8'))
-stages = json.load(open("jsons/stage_table.json", encoding='utf-8'))
 materials = materials["matrix"]
+stages = json.load(open("jsons/stage_table.json", encoding='utf-8'))
 stages = stages["stages"]
+savedata = json.load(open("savedata.json", encoding='utf-8'))
+
+
+class Settings:
+    data = {}
+
+    def __init__(self, master=None):
+        self.master = master
+        Settings.data.setdefault("repo", master.rep_choose_var.get())
 
 
 def return_list_of_ears():
@@ -73,19 +80,37 @@ def return_list_of_ears():
     :return: Возращает список имен ушек в виде массива.
     """
     earlist = []
-    for ear in ears.values():
-        if ear["displayNumber"]:
-            earlist.append(ear["name"])
+    if Settings.data.get("repo"):
+        repo = Settings.data["repo"]
+    else:
+        repo = savedata["settings"]["last_used_repository"]
+    if repo == "en_US":
+        for ear in ears.values():
+            if ear["displayNumber"]:
+                earlist.append(ear["name"])
+    else:
+        for ear in ears.values():
+            if ear["displayNumber"]:
+                earlist.append(ear["appellation"])
     earlist.sort()
     return earlist
 
 
 class Operator:
     def __init__(self, name):
+        if Settings.data.get("repo"):
+            repo = Settings.data["repo"]
+        else:
+            repo = savedata["settings"]["last_used_repository"]
         for ear in ears.values():
-            if ear["name"] == name:
-                self.ear = ear
-                break
+            if repo == "en_US":
+                if ear["name"] == name:
+                    self.ear = ear
+                    break
+            else:
+                if ear["appellation"] == name:
+                    self.ear = ear
+                    break
 
     def phase(self, phase):
         if len(self.ear["phases"]) > 0:

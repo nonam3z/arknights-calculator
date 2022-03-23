@@ -62,7 +62,7 @@ class FarmingFrame(tk.Frame):
             item.have = iFrame.InventoryFrame.frames[item.itemId].itemHave.get()
         return None
 
-    def create_path(self, results):
+    def create_path(self, results, lastiid):
         """
         Создаем таблицу фарма материалов на основе матрицы stages и данных стоимости материалов.
         :param results: Принимает на вход словарик результатов из id предмета и count количества предмета.

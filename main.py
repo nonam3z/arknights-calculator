@@ -1,11 +1,12 @@
-import mainWindow
+import json
 import os
 import tkinter as tk
 from tkinter import *
-import json
+
 import ArknightsDataParser
-import inventoryPanels
 import inventoryFrame as iFrame
+import inventoryPanels
+import mainWindow
 
 
 class EarEncoder(json.JSONEncoder):
@@ -29,7 +30,7 @@ class EarEncoder(json.JSONEncoder):
 
 def save_data():
     earList = app.planner.allEarsList
-    data = {"earList": {}, "inventory": {}}
+    data = {"earList": {}, "inventory": {}, "settings": {}}
     for ears in earList.values():
         data["earList"][ears.name] = {}
         data["earList"][ears.name]["iid"] = ears.iid
@@ -41,6 +42,7 @@ def save_data():
         data["inventory"][items.itemId]["itemId"] = items.itemId
         if items.itemHave.get():
             data["inventory"][items.itemId]["have"] = items.itemHave.get()
+    data["settings"]["last_used_repository"] = str(app.rep_choose_var.get())
     if os.path.exists("savedata.json"):
         os.remove("savedata.json")
     file = open("savedata.json", 'w+')

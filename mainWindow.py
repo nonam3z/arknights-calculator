@@ -19,8 +19,11 @@ if os.path.exists("savedata.json"):
 
 
 class Application(tk.Frame):
+
     def __init__(self, master=None):
         super().__init__(master)
+
+        self.rep_choose_var = tk.StringVar()
 
         self.master = master
         self.winfo_toplevel().title("Arknights Calculator")
@@ -42,15 +45,30 @@ class Application(tk.Frame):
         self.tabs.add(self.calculator, text="Path Calculator")
         self.farming = farmingFrame.FarmingFrame(self)
         self.tabs.add(self.farming, text="Farming Calculator")
+        self.settings = ArknightsDataParser.Settings(self)
 
         self.menu = tk.Menu(self, tearoff=False)
         self.master.config(menu=self.menu)
 
-        self.settings = tk.Menu(self.menu, tearoff=False)
-        self.settings.add_command(label="Clear Inventory", command=self.check_error_typing)
+        self.settings_menu = tk.Menu(self.menu, tearoff=False)
+        self.settings_menu.add_command(label="Clear Inventory", command=self.check_error_typing)
+        self.settings_menu.add_command(label="Update Arknights Data", command=self.update_data)
 
-        self.menu.add_cascade(label="Settings", menu=self.settings)
+        self.rep_choose = tk.Menu(self.menu, tearoff=False)
+        self.rep_choose.add_checkbutton(label="en-US", onvalue="en_US", variable=self.rep_choose_var,
+                                        command=self.update_data)
+        self.rep_choose.add_checkbutton(label="zh-CN", onvalue="zh_CN", variable=self.rep_choose_var,
+                                        command=self.update_data)
+        self.rep_choose.add_checkbutton(label="ja-JP", onvalue="ja_JP", variable=self.rep_choose_var,
+                                        command=self.update_data)
+        self.rep_choose.add_checkbutton(label="ko-KR", onvalue="ko_KR", variable=self.rep_choose_var,
+                                        command=self.update_data)
+        self.rep_choose.add_checkbutton(label="zh-TW", onvalue="zh_TW", variable=self.rep_choose_var,
+                                        command=self.update_data)
+
+        self.menu.add_cascade(label="Settings", menu=self.settings_menu)
         self.menu.add_command(label="About", command=self.about_message)
+        self.menu.add_cascade(label="Repository", menu=self.rep_choose)
 
     @staticmethod
     def about_message():
@@ -65,6 +83,20 @@ class Application(tk.Frame):
         if checkBox == "yes":
             self.inventory.clear_inventory()
         return None
+
+    def update_data(self):
+        self.settings.data["repo"] = self.rep_choose_var.get()
+        ArknightsDataParser.update_script(self.rep_choose_var.get())
+        ArknightsDataParser.ears = json.load(open("jsons/character_table.json", encoding='utf-8'))
+        ArknightsDataParser.items = json.load(open("jsons/item_table.json", encoding='utf-8'))
+        ArknightsDataParser.formulas = json.load(open("jsons/building_data.json", encoding='utf-8'))
+        ArknightsDataParser.gameconst = json.load(open("jsons/gamedata_const.json", encoding='utf-8'))
+        ArknightsDataParser.materials = json.load(open("jsons/materials.json", encoding='utf-8'))
+        ArknightsDataParser.materials = ArknightsDataParser.materials["matrix"]
+        ArknightsDataParser.stages = json.load(open("jsons/stage_table.json", encoding='utf-8'))
+        ArknightsDataParser.stages = ArknightsDataParser.stages["stages"]
+        self.planner.selectOperator["values"] = ArknightsDataParser.return_list_of_ears()
+        messagebox.showinfo(title="Complete!", message="Succesful updated all data.")
 
     def restore_data(self):
         if savedata:
@@ -81,7 +113,8 @@ class Application(tk.Frame):
                 self.planner.earsList.insert("", tk.END,
                                              values=(name, self.planner.create_upgrade_string(current, desired)),
                                              iid=iid)
-                # self.planner.create_path_list()
                 self.calculator.update()
             for item in savedata["inventory"].values():
                 iFrame.InventoryFrame.frames[item["itemId"]].itemHave.set(int(item["have"]))
+            self.rep_choose_var.set(savedata["settings"]["last_used_repository"])
+            self.settings.data.setdefault("repo", self.rep_choose_var.get())

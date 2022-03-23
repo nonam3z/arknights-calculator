@@ -21,6 +21,7 @@ class CalculateFrame(tk.Frame):
         self.master = master
         self.item_list = {}
         self.farming_data = {}
+        self.crafting_data = {}
 
         self.text = StringVar()
         self.label = tk.Label(self, justify="left", textvariable=self.text)
@@ -70,23 +71,18 @@ class CalculateFrame(tk.Frame):
         :return: Ничего не возвращает.
         """
         self.farming_data.clear()  # Чистим farming_data.
-        # self.crafting_data.clear()
+        self.crafting_data.clear()
         for i in self.calculateFrame.get_children():  # Чистим таблицу.
             self.calculateFrame.delete(i)
         if results:  # Если есть результаты расчетов выполняем строительство дерева.
-            CompilatedResults = self.calculateFrame.insert("", tk.END, values=("Compilated Results", "", "", "", "", ""), tags='comp')
             for i in results:
-                self.return_compilated_results(i, results[i], CompilatedResults)
+                self.return_compilated_results(i, results[i], "")
                 self.create_tree(i, results[i])
         # !!! Временная функция очистки результатов фарма от того, что уже есть в инвентаре.
         self.farming_data = self.remove_items_from_list(self.farming_data)
         # !!! Останется ли в результате - неизвестно.
         if self.farming_data:
-            Farming = self.calculateFrame.insert("", tk.END, values=("Farming", "", "", "", "", ""), tags='farm')
-            self.create_farming_path(self.farming_data, Farming)  # Вызываем строительство таблицы фарма материалов в другом фрейме.
-        # if self.crafting_data:
-        #   Crafting = self.calculateFrame.insert("", tk.END, values=("Crafting", "", "", "", "", ""), tags="craft")
-        #   self.create_farming_path(self.crafting_data, Crafting)
+            self.master.farming.create_path(self.farming_data, "")  # Вызываем строительство таблицы фарма материалов в другом фрейме.
         return None
 
     def remove_items_from_list(self, results):

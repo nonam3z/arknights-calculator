@@ -98,29 +98,15 @@ class Application(tk.Frame):
         return None
 
     def update_data(self):
-        checkBox = messagebox.askquestion(title="Changing Repository", message="Are you sure? \n"
-                                                                               "This potentially can corrupt data "
-                                                                               "stored in ears list.\nProceed with caution!")
-        if checkBox == "yes":
-            self.save_data()
-            self.inventory.clear_inventory()
-            ArknightsDataParser.update_script(self.rep_choose_var.get())
-            settings_obj = ArknightsDataParser.Settings()
-            settings_obj.repository = self.rep_choose_var.get()
-            self.save_settings()
-            data = ArknightsDataParser.Database()
-            data.rep = ArknightsDataParser.Settings().repository
-            data.data = ArknightsDataParser.FileRepository(data.rep)
-            data.ears = data.data.ears
-            data.items = data.data.items
-            data.formulas = data.data.formulas
-            data.gameconst = data.data.gameconst
-            data.materials = data.data.materials
-            data.stages = data.data.stages
-            self.planner.selectOperator["values"] = ArknightsDataParser.return_list_of_ears()
-            self.inventory.update_inventory()
-            self.restore_data()
-            messagebox.showinfo(title="Complete!", message="Succesful updated all data.")
+        self.save_data()
+        self.inventory.clear_inventory()
+        ArknightsDataParser.update_script(self.rep_choose_var.get())
+        self.update_variables()
+        self.planner.selectOperator["values"] = ArknightsDataParser.return_list_of_ears()
+        self.inventory.update_inventory()
+        self.calculator.create_item_list()
+        self.farming.create_item_list()
+        self.restore_data()
 
     def save_data(self):
         earList = self.planner.allEarsList
@@ -168,6 +154,7 @@ class Application(tk.Frame):
             if os.path.exists("jsons/" + self.settings.repository + "/savedata.json"):
                 size = os.path.getsize("jsons/" + self.settings.repository + "/savedata.json")
                 if size:
+                    self.update_variables()
                     savedata = json.load(open("jsons/" + self.settings.repository + "/savedata.json", encoding='utf-8'))
                     self.planner.del_all_ears()
                     for ear in savedata["earList"].values():
@@ -186,8 +173,21 @@ class Application(tk.Frame):
                                                      values=(
                                                          name, self.planner.create_upgrade_string(current, desired)),
                                                      iid=iid)
-                        self.calculator.update()
                     for item in savedata["inventory"].values():
                         iFrame.InventoryFrame.frames[item["itemId"]].itemHave.set(int(item["have"]))
             else:
                 return None
+
+    def update_variables(self):
+        settings_obj = ArknightsDataParser.Settings()
+        settings_obj.repository = self.rep_choose_var.get()
+        self.save_settings()
+        data = ArknightsDataParser.Database()
+        data.rep = ArknightsDataParser.Settings().repository
+        data.data = ArknightsDataParser.FileRepository(data.rep)
+        data.ears = data.data.ears
+        data.items = data.data.items
+        data.formulas = data.data.formulas
+        data.gameconst = data.data.gameconst
+        data.materials = data.data.materials
+        data.stages = data.data.stages

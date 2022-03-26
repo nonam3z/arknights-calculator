@@ -1,7 +1,6 @@
 import json
 import math
 import os
-from urllib.request import getproxies
 from urllib.request import urlretrieve
 
 import requests
@@ -25,39 +24,48 @@ def get_file_from_github(filename, rep):
     urlretrieve(data, file)
 
 
-def get_penguin_data():
+def get_penguin_data(rep):
     """
     Метод для получения матрицы стоимости и частоты выпадения материалов с Penguin Statistics.
     """
-    repository = "https://penguin-stats.io/PenguinStats/api/v2/result/matrix?show_closed_zones=false&server=US"
-    file = "jsons/materials.json"
-    os.remove(file)
-    open(file, 'w+')
-    urlretrieve(repository, file)
+    repository = "https://penguin-stats.io/PenguinStats/api/v2/result/matrix"
+    file = "jsons/" + rep + "/materials.json"
+    reps = ["en_US", "zh_CN", "ja_JP", "ko_KR", "zh_TW"]
+    servers = ["US", "CN", "JP", "KR", "CN"]
+    if rep in reps:
+        server = servers[reps.index(rep)]
+    else:
+        server = "US"
+    try:
+        os.remove(file)
+    except OSError as error:
+        pass
+    PARAMS = {"server": server, "show_closed_zones": False}
+    data = str(requests.get(url=repository, params=PARAMS).content)
+    data = data[2:-1:]
+    open(file, 'w+').write(data)
 
 
 def update_script(rep):
     """
     Создание/обновление базы данных для работы программы.
     """
-    os.makedirs("jsons", exist_ok=True)
-    session = requests.session()
-    session.proxies = getproxies()
-    print("Getting characters data...")
-    get_file_from_github("character_table", rep)
-    print("Getting items data...")
-    get_file_from_github("item_table", rep)
-    print("Getting formulas data...")
-    get_file_from_github("building_data", rep)
-    print("Getting game constants...")
-    get_file_from_github("gamedata_const", rep)
-    print("Getting stages data...")
-    get_file_from_github("stage_table", rep)
-    print("Download complete!")
-    # get_penguin_data()
-
-
-# update_script("en_US")
+    # os.makedirs("jsons", exist_ok=True)
+    # session = requests.session()
+    # session.proxies = getproxies()
+    # print("Getting characters data...")
+    # get_file_from_github("character_table", rep)
+    # print("Getting items data...")
+    # get_file_from_github("item_table", rep)
+    # print("Getting formulas data...")
+    # get_file_from_github("building_data", rep)
+    # print("Getting game constants...")
+    # get_file_from_github("gamedata_const", rep)
+    # print("Getting stages data...")
+    # get_file_from_github("stage_table", rep)
+    # print("Getting matrix data...")
+    # get_penguin_data(rep)
+    # print("Download complete!")
 
 
 class Singleton(type):
@@ -74,11 +82,30 @@ class Singleton(type):
 
 class FileRepository:
     def __init__(self, rep):
+        self.ears = {}
+        self.items = {}
+        self.formulas = {}
+        self.gameconst = {}
+        self.materials = {}
+        self.stages = {}
+        try:
+            self.load_files(rep)
+        except json.JSONDecodeError as error:
+            for file_name in os.listdir("jsons/" + rep):
+                if os.path.isfile("jsons/" + rep + "/" + file_name):
+                    os.remove("jsons/" + rep + "/" + file_name)
+            update_script(rep)
+            self.load_files(rep)
+        except FileNotFoundError as error:
+            update_script(rep)
+            self.load_files(rep)
+
+    def load_files(self, rep):
         self.ears = json.load(open("jsons/" + rep + "/character_table.json", encoding='utf-8'))
         self.items = json.load(open("jsons/" + rep + "/item_table.json", encoding='utf-8'))
         self.formulas = json.load(open("jsons/" + rep + "/building_data.json", encoding='utf-8'))
         self.gameconst = json.load(open("jsons/" + rep + "/gamedata_const.json", encoding='utf-8'))
-        self.materials = json.load(open("jsons/materials.json", encoding='utf-8'))
+        self.materials = json.load(open("jsons/" + rep + "/materials.json", encoding='utf-8'))
         self.materials = self.materials["matrix"]
         self.stages = json.load(open("jsons/" + rep + "/stage_table.json", encoding='utf-8'))
         self.stages = self.stages["stages"]

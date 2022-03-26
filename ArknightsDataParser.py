@@ -15,8 +15,12 @@ def get_file_from_github(filename, rep):
     """
     repository = "https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/" + str(rep) + "/gamedata/excel/"
     data = (repository + filename + ".json")
-    file = ("jsons/" + filename + ".json")
-    os.remove(file)
+    os.makedirs(("jsons/" + rep + "/"), exist_ok=True)
+    file = ("jsons/" + rep + "/" + filename + ".json")
+    try:
+        os.remove(file)
+    except OSError as error:
+        pass
     open(file, 'w+')
     urlretrieve(data, file)
 
@@ -24,9 +28,8 @@ def get_file_from_github(filename, rep):
 def get_penguin_data():
     """
     Метод для получения матрицы стоимости и частоты выпадения материалов с Penguin Statistics.
-    В Крыму не работает, поэтому проверить его работу не могу.
     """
-    repository = "https://penguin-stats.io/PenguinStats/api/v2/result/matrix.json?show_closed_zones=false&server=US"
+    repository = "https://penguin-stats.io/PenguinStats/api/v2/result/matrix?show_closed_zones=false&server=US"
     file = "jsons/materials.json"
     os.remove(file)
     open(file, 'w+')
@@ -35,7 +38,7 @@ def get_penguin_data():
 
 def update_script(rep):
     """
-    Создание\\обновление базы данных для работы программы.
+    Создание/обновление базы данных для работы программы.
     """
     os.makedirs("jsons", exist_ok=True)
     session = requests.session()
@@ -54,24 +57,100 @@ def update_script(rep):
     # get_penguin_data()
 
 
-# Создание набора глобальных переменных для работы программы.
-ears = json.load(open("jsons/character_table.json", encoding='utf-8'))
-items = json.load(open("jsons/item_table.json", encoding='utf-8'))
-formulas = json.load(open("jsons/building_data.json", encoding='utf-8'))
-gameconst = json.load(open("jsons/gamedata_const.json", encoding='utf-8'))
-materials = json.load(open("jsons/materials.json", encoding='utf-8'))
-materials = materials["matrix"]
-stages = json.load(open("jsons/stage_table.json", encoding='utf-8'))
-stages = stages["stages"]
-savedata = json.load(open("savedata.json", encoding='utf-8'))
+# update_script("en_US")
 
 
-class Settings:
-    data = {}
+class Singleton(type):
+    _instances = {}
 
-    def __init__(self, master=None):
-        self.master = master
-        Settings.data.setdefault("repo", master.rep_choose_var.get())
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+    def clear(cls):
+        cls._instances = {}
+
+
+class FileRepository:
+    def __init__(self, rep):
+        self.ears = json.load(open("jsons/" + rep + "/character_table.json", encoding='utf-8'))
+        self.items = json.load(open("jsons/" + rep + "/item_table.json", encoding='utf-8'))
+        self.formulas = json.load(open("jsons/" + rep + "/building_data.json", encoding='utf-8'))
+        self.gameconst = json.load(open("jsons/" + rep + "/gamedata_const.json", encoding='utf-8'))
+        self.materials = json.load(open("jsons/materials.json", encoding='utf-8'))
+        self.materials = self.materials["matrix"]
+        self.stages = json.load(open("jsons/" + rep + "/stage_table.json", encoding='utf-8'))
+        self.stages = self.stages["stages"]
+
+
+class Savedata:
+    def __init__(self):
+        self.savedata = json.load(open("savedata.json", encoding='utf-8'))
+
+
+class Settings(metaclass=Singleton):
+    def __init__(self):
+        self.data = Savedata().savedata
+        self.rep = "en_US"
+        if self.data["settings"].get("repository"):
+            self.rep = self.data["settings"]["repository"]
+
+
+class Database(metaclass=Singleton):
+    def __init__(self):
+        self.rep = Settings().rep
+        self.data = FileRepository(self.rep)
+        self.ears = self.data.ears
+        self.items = self.data.items
+        self.formulas = self.data.formulas
+        self.gameconst = self.data.gameconst
+        self.materials = self.data.materials
+        self.stages = self.data.stages
+
+
+class Inventory:
+    def __init__(self):
+        self.inventory = {}
+        self.data = Database()
+        for item in self.data.items["items"].values():
+            if item["itemId"] in ["4001", "5001", "32001", "4006"]:
+                self.inventory[item["itemId"]] = Item(item["itemId"])
+            if item["classifyType"] == "MATERIAL" and item["itemType"] == "MATERIAL" and not item["obtainApproach"]:
+                self.inventory[item["itemId"]] = Item(item["itemId"])
+        self.inventory = self.calc_flags(self.inventory)
+        self.inventory = self.add_some_shitty_formulas(self.inventory)
+
+    @staticmethod
+    def calc_flags(inv):
+        for item in inv.values():
+            if len(item.formula) > 0:
+                for i in item.formula["costs"]:
+                    item.craftingAp += inv[i["id"]].bestAp * i["count"]
+            if 0 < item.craftingAp < item.bestAp:
+                item.flags = "Crafting"
+            else:
+                item.flags = "Farming"
+        return inv
+
+    @staticmethod
+    def add_some_shitty_formulas(inv):
+        for item in inv.values():
+            if item.itemId == "4001":
+                item.bestAp = 0.004
+                item.bestStage = "CE-5"
+                item.bestStageId = "wk_melee_5"
+            elif item.itemId == "5001":
+                pass
+            elif item.itemId == "32001":
+                item.bestAp = 1350
+                item.formula = {"costs": []}
+                item.formula["costs"].append({"id": "4006", "count": 90, "type": "MATERIAL"})
+            elif item.itemId == "4006":
+                item.bestAp = 1.5
+                item.bestStage = "AP-5"
+                item.bestStageId = "wk_toxic_5"
+        return inv
 
 
 def return_list_of_ears():
@@ -80,16 +159,13 @@ def return_list_of_ears():
     :return: Возращает список имен ушек в виде массива.
     """
     earlist = []
-    if Settings.data.get("repo"):
-        repo = Settings.data["repo"]
-    else:
-        repo = savedata["settings"]["last_used_repository"]
-    if repo == "en_US":
-        for ear in ears.values():
+    data = Database()
+    if data.rep == "en_US":
+        for ear in data.ears.values():
             if ear["displayNumber"]:
                 earlist.append(ear["name"])
     else:
-        for ear in ears.values():
+        for ear in data.ears.values():
             if ear["displayNumber"]:
                 earlist.append(ear["appellation"])
     earlist.sort()
@@ -98,12 +174,9 @@ def return_list_of_ears():
 
 class Operator:
     def __init__(self, name):
-        if Settings.data.get("repo"):
-            repo = Settings.data["repo"]
-        else:
-            repo = savedata["settings"]["last_used_repository"]
-        for ear in ears.values():
-            if repo == "en_US":
+        self.data = Database()
+        for ear in self.data.ears.values():
+            if self.data.rep == "en_US":
                 if ear["name"] == name:
                     self.ear = ear
                     break
@@ -131,7 +204,7 @@ class Operator:
             return 1
 
     def cost(self, elite):
-        cost = gameconst["evolveGoldCost"][self.ear["rarity"]][elite - 1]
+        cost = self.data.gameconst["evolveGoldCost"][self.ear["rarity"]][elite - 1]
         if cost == -1:
             return 0
         else:
@@ -144,20 +217,11 @@ class Operator:
             return self.ear["phases"][elite]["evolveCost"]
 
 
-class Inventory:
-    def __init__(self):
-        self.items = {}
-        for item in items["items"].values():
-            if item["itemId"] in ["4001", "5001", "32001", "4006"]:
-                self.items[item["itemId"]] = Item(item["itemId"])
-            if item["classifyType"] == "MATERIAL" and item["itemType"] == "MATERIAL" and not item["obtainApproach"]:
-                self.items[item["itemId"]] = Item(item["itemId"])
-
-
 class Item:
     def __init__(self, itemid):
+        self.data = Database()
         item = None
-        for item in items["items"].values():
+        for item in self.data.items["items"].values():
             if item["itemId"] == itemid:
                 self.item = item
                 break
@@ -170,10 +234,10 @@ class Item:
         if item["buildingProductList"]:
             if item["buildingProductList"][0]["roomType"] == "WORKSHOP":
                 self.itemCraftingId = item["buildingProductList"][0]["formulaId"]
-                self.formula = formulas["workshopFormulas"][self.itemCraftingId]
+                self.formula = self.data.formulas["workshopFormulas"][self.itemCraftingId]
             if item["buildingProductList"][0]["roomType"] == "MANUFACTURE":
                 self.itemCraftingId = item["buildingProductList"][0]["formulaId"]
-                self.formula = formulas["manufactFormulas"][self.itemCraftingId]
+                self.formula = self.data.formulas["manufactFormulas"][self.itemCraftingId]
         self.stages = self.get_stages()
         self.bestAp = math.inf
         self.craftingAp = 0
@@ -186,16 +250,16 @@ class Item:
 
     def get_stages(self):
         results = {}
-        for i in range(materials.__len__()):
-            stage = materials[i]
+        for i in range(self.data.materials.__len__()):
+            stage = self.data.materials[i]
             if stage["itemId"] == self.itemId:
                 results[stage["stageId"]] = stage
         return results
 
     def calc_cost(self):
         for stage in self.stages.values():
-            if stages.get(stage["stageId"]):
-                ap_cost = stages[stage["stageId"]]["apCost"]
+            if self.data.stages.get(stage["stageId"]):
+                ap_cost = self.data.stages[stage["stageId"]]["apCost"]
             else:
                 ap_cost = math.inf
             percentage = stage["quantity"] / stage["times"]
@@ -205,49 +269,14 @@ class Item:
                 best_ap = math.inf
             if best_ap < self.bestAp:
                 self.bestAp = best_ap
-                self.bestStage = stages[stage["stageId"]]["code"]
+                self.bestStage = self.data.stages[stage["stageId"]]["code"]
                 self.bestStageId = stage["stageId"]
         return None
 
 
-def create_inventory():
-    inv = Inventory()
-    return inv
-
-
-def calc_flags(inv):
-    for item in inv.items.values():
-        if len(item.formula) > 0:
-            for i in item.formula["costs"]:
-                item.craftingAp += inv.items[i["id"]].bestAp * i["count"]
-        if 0 < item.craftingAp < item.bestAp:
-            item.flags = "Crafting"
-        else:
-            item.flags = "Farming"
-    return inv
-
-
-def add_some_shitty_formulas(inv):
-    for item in inv.items.values():
-        if item.itemId == "4001":
-            item.bestAp = 0.004
-            item.bestStage = "CE-5"
-            item.bestStageId = "wk_melee_5"
-        elif item.itemId == "5001":
-            pass
-        elif item.itemId == "32001":
-            item.bestAp = 1350
-            item.formula = {"costs": []}
-            item.formula["costs"].append({"id": "4006", "count": 90, "type": "MATERIAL"})
-        elif item.itemId == "4006":
-            item.bestAp = 1.5
-            item.bestStage = "AP-5"
-            item.bestStageId = "wk_toxic_5"
-    return inv
-
-
 class OperatorState:
     def __init__(self, iid, name, current, desired):
+        self.data = Database()
         self.iid = iid
         self.name = name
         self.operator = Operator(self.name)
@@ -270,8 +299,9 @@ class OperatorState:
             if self.current.elite < elite == self.desired.elite:
                 self.calc_needs(0, self.desired.level - 1, elite)
         for elite in range(self.current.elite, self.desired.elite):
-            self.cost["4001"] = self.cost.get("4001", 0) + gameconst["evolveGoldCost"][self.operator.ear["rarity"]][
-                elite]
+            self.cost["4001"] = self.cost.get("4001", 0) + \
+                                self.data.gameconst["evolveGoldCost"][self.operator.ear["rarity"]][
+                                    elite]
             for i in self.return_results(elite + 1).items():
                 count = self.cost.get(i[0], 0)
                 self.cost[i[0]] = count + i[1]
@@ -304,8 +334,8 @@ class OperatorState:
 
     def calc_needs(self, lvlmin, lvlmax, elite):
         for level in range(lvlmin, lvlmax):
-            self.cost["5001"] = self.cost.get("5001", 0) + gameconst["characterExpMap"][elite][level]
-            self.cost["4001"] = self.cost.get("4001", 0) + gameconst["characterUpgradeCostMap"][elite][level]
+            self.cost["5001"] = self.cost.get("5001", 0) + self.data.gameconst["characterExpMap"][elite][level]
+            self.cost["4001"] = self.cost.get("4001", 0) + self.data.gameconst["characterUpgradeCostMap"][elite][level]
         return None
 
     def return_results(self, elite):
@@ -335,9 +365,3 @@ class Stats:
         self.skill1 = skill1
         self.skill2 = skill2
         self.skill3 = skill3
-
-
-inventory = create_inventory()
-inventory = add_some_shitty_formulas(inventory)
-inventory = calc_flags(inventory)
-pass

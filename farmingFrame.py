@@ -53,7 +53,7 @@ class FarmingFrame(tk.Frame):
         Создает список предметов с иконками для дальнейшей отрисовки таблицы.
         :return: Ничего не возвращает.
         """
-        self.item_list = ADP.inventory.items
+        self.item_list = ADP.Inventory().inventory
         for item in self.item_list.values():
             icon = Image.open("items/" + item.iconId + ".png")
             icon.thumbnail((20, 20), Image.ANTIALIAS)
@@ -68,7 +68,8 @@ class FarmingFrame(tk.Frame):
         :param results: Принимает на вход словарик результатов из id предмета и count количества предмета.
         :return: Ничего не возвращает.
         """
-        stages = ADP.stages     # Получаем ссылку на матрицу stages.
+        data = ADP.Database()
+        stages = data.stages     # Получаем ссылку на матрицу stages.
         total_cost = 0      # Переменная, общая стомость в думалке для фарма.
         ignore = ["5001", "3213", "3223", "3233", "3243", "3253", "3263", "3273", "3283"]   # Игнорим часть предметов.
         for i in self.farmingFrame.get_children():  # Чистим таблицу.

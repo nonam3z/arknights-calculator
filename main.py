@@ -21,9 +21,11 @@ class EarEncoder(json.JSONEncoder):
             return obj.__dict__
         if isinstance(obj, ArknightsDataParser.Operator):
             return obj.__dict__
-        if isinstance(obj, ArknightsDataParser.Inventory):
+        if isinstance(obj, ArknightsDataParser.Database):
             return obj.__dict__
         if isinstance(obj, ArknightsDataParser.Item):
+            return obj.__dict__
+        if isinstance(obj, ArknightsDataParser.Inventory):
             return obj.__dict__
         return json.JSONEncoder.default(self, obj)
 
@@ -42,7 +44,7 @@ def save_data():
         data["inventory"][items.itemId]["itemId"] = items.itemId
         if items.itemHave.get():
             data["inventory"][items.itemId]["have"] = items.itemHave.get()
-    data["settings"]["last_used_repository"] = str(app.rep_choose_var.get())
+    data["settings"]["repository"] = str(app.rep_choose_var.get())
     if os.path.exists("savedata.json"):
         os.remove("savedata.json")
     file = open("savedata.json", 'w+')

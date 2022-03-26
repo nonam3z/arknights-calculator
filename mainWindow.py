@@ -45,7 +45,7 @@ class Application(tk.Frame):
         self.tabs.add(self.calculator, text="Path Calculator")
         self.farming = farmingFrame.FarmingFrame(self)
         self.tabs.add(self.farming, text="Farming Calculator")
-        self.settings = ArknightsDataParser.Settings(self)
+        self.settings = ArknightsDataParser.Settings()
 
         self.menu = tk.Menu(self, tearoff=False)
         self.master.config(menu=self.menu)
@@ -65,6 +65,7 @@ class Application(tk.Frame):
                                         command=self.update_data)
         self.rep_choose.add_checkbutton(label="zh-TW", onvalue="zh_TW", variable=self.rep_choose_var,
                                         command=self.update_data)
+        self.rep_choose_var.set("en_US")
 
         self.menu.add_cascade(label="Settings", menu=self.settings_menu)
         self.menu.add_command(label="About", command=self.about_message)
@@ -85,18 +86,26 @@ class Application(tk.Frame):
         return None
 
     def update_data(self):
-        self.settings.data["repo"] = self.rep_choose_var.get()
-        ArknightsDataParser.update_script(self.rep_choose_var.get())
-        ArknightsDataParser.ears = json.load(open("jsons/character_table.json", encoding='utf-8'))
-        ArknightsDataParser.items = json.load(open("jsons/item_table.json", encoding='utf-8'))
-        ArknightsDataParser.formulas = json.load(open("jsons/building_data.json", encoding='utf-8'))
-        ArknightsDataParser.gameconst = json.load(open("jsons/gamedata_const.json", encoding='utf-8'))
-        ArknightsDataParser.materials = json.load(open("jsons/materials.json", encoding='utf-8'))
-        ArknightsDataParser.materials = ArknightsDataParser.materials["matrix"]
-        ArknightsDataParser.stages = json.load(open("jsons/stage_table.json", encoding='utf-8'))
-        ArknightsDataParser.stages = ArknightsDataParser.stages["stages"]
-        self.planner.selectOperator["values"] = ArknightsDataParser.return_list_of_ears()
-        messagebox.showinfo(title="Complete!", message="Succesful updated all data.")
+        checkBox = messagebox.askquestion(title="Changing Repository", message="Are you sure? \n"
+                                                                              "This potentially can corrupt data "
+                                                                              "stored in ears list.\nProceed with caution!")
+        if checkBox == "yes":
+            self.inventory.clear_inventory()
+            ArknightsDataParser.update_script(self.rep_choose_var.get())
+            settings = ArknightsDataParser.Settings()
+            settings.rep = self.rep_choose_var.get()
+            data = ArknightsDataParser.Database()
+            data.rep = ArknightsDataParser.Settings().rep
+            data.data = ArknightsDataParser.FileRepository(data.rep)
+            data.ears = data.data.ears
+            data.items = data.data.items
+            data.formulas = data.data.formulas
+            data.gameconst = data.data.gameconst
+            data.materials = data.data.materials
+            data.stages = data.data.stages
+            self.planner.selectOperator["values"] = ArknightsDataParser.return_list_of_ears()
+            self.inventory.update_inventory()
+            messagebox.showinfo(title="Complete!", message="Succesful updated all data.")
 
     def restore_data(self):
         if savedata:
@@ -116,5 +125,8 @@ class Application(tk.Frame):
                 self.calculator.update()
             for item in savedata["inventory"].values():
                 iFrame.InventoryFrame.frames[item["itemId"]].itemHave.set(int(item["have"]))
-            self.rep_choose_var.set(savedata["settings"]["last_used_repository"])
-            self.settings.data.setdefault("repo", self.rep_choose_var.get())
+            if savedata["settings"].get("repository"):
+                self.rep_choose_var.set(savedata["settings"]["repository"])
+            else:
+                self.rep_choose_var.set("en_US")
+            self.settings.rep = self.rep_choose_var.get()

@@ -91,15 +91,12 @@ class Savedata:
 
 class Settings(metaclass=Singleton):
     def __init__(self):
-        self.data = Savedata().savedata
-        self.rep = "en_US"
-        if self.data["settings"].get("repository"):
-            self.rep = self.data["settings"]["repository"]
+        self.repository = "en_US"
 
 
 class Database(metaclass=Singleton):
     def __init__(self):
-        self.rep = Settings().rep
+        self.rep = Settings().repository
         self.data = FileRepository(self.rep)
         self.ears = self.data.ears
         self.items = self.data.items

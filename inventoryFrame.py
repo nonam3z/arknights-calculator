@@ -11,7 +11,7 @@ import inventoryPanels
 def parse_inventory():  # Парсим инвентарь, рассчитываем размеры для матрицы фреймов для отрисовки инвентаря.
     inv = ADP.Inventory().inventory
     i = int(inv.__len__())
-    j = math.ceil(i / 6)
+    j = math.ceil(i / 7)
     return {'inv': inv, 'i': i, 'j': j}
 
 
@@ -42,7 +42,7 @@ class InventoryFrame(tk.Frame):
 
         self.inv = parse_inventory()
 
-        for c in range(6):
+        for c in range(7):
             self.columnconfigure(c, weight=1)
             for r in range(self.inv['j']):
                 self.rowconfigure(r, weight=1)
@@ -67,7 +67,7 @@ class InventoryFrame(tk.Frame):
             if itemFrame.itemId != "5001":
                 itemFrame.grid(row=n, column=m, sticky="nsew")
                 m = m + 1
-                if m >= 6:
+                if m >= 7:
                     n = n + 1
                     m = 0
 

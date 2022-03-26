@@ -242,6 +242,11 @@ class Planner(tk.Frame):
             self.allEarsList.pop(values[0])
         # self.create_path_list()
 
+    def del_all_ears(self):
+        for ear in self.earsList.get_children():
+            self.earsList.delete(ear)
+        self.allEarsList = {}
+
     # noinspection PyUnusedLocal
     def set_max_lvls(self, event):
         """

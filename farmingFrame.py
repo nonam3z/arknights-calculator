@@ -55,11 +55,15 @@ class FarmingFrame(tk.Frame):
         """
         self.item_list = ADP.Inventory().inventory
         for item in self.item_list.values():
-            icon = Image.open("items/" + item.iconId + ".png")
-            icon.thumbnail((20, 20), Image.ANTIALIAS)
-            icon = ImageTk.PhotoImage(icon)
-            item.icon = icon
             item.have = iFrame.InventoryFrame.frames[item.itemId].itemHave.get()
+            try:
+                icon = Image.open("items/" + item.iconId + ".png")
+                icon.thumbnail((20, 20), Image.ANTIALIAS)
+                icon = ImageTk.PhotoImage(icon)
+                item.icon = icon
+            except FileNotFoundError:
+                print("File with id " + item.iconId + " not found, skipping...")
+                item.icon = None
         return None
 
     def create_path(self, results, lastiid):
@@ -77,21 +81,31 @@ class FarmingFrame(tk.Frame):
         if results:
             for item in results:
                 if item not in ignore:
-                    have = iFrame.InventoryFrame.frames[item].itemHave.get()
-                    stage = self.item_list[item].bestStageId
-                    if int(have) < results[item]:
-                        runs = math.ceil((self.item_list[item].bestAp * (results[item] - float(have))/float(stages[stage]["apCost"])))
-                    else:
-                        runs = 0
-                    total_cost += runs * stages[stage]["apCost"]
-                    if runs != 0:
-                        self.farmingFrame.insert("", tk.END, image=self.item_list[item].icon,
-                                                 values=(
-                                                   self.item_list[item].name, results[item],
-                                                   have,
-                                                   self.item_list[item].bestAp,
-                                                   self.item_list[item].bestStage,
-                                                   runs,
-                                                   stages[stage]["apCost"] * runs))
+                    self.calc_cost(item, results[item], "")
+        for child in self.farmingFrame.get_children():
+            # dbg = self.farmingFrame.item(child)
+            total_cost = total_cost + int(self.farmingFrame.item(child)["values"][6])
         self.text.set("Total sanity cost: "+str(total_cost)+", ETA without Prime: "+str(total_cost/240)+", ETA with Prime: "+str(total_cost/300))
         return None
+
+    def calc_cost(self, item, count, lastiid):
+        data = ADP.Database()
+        stages = data.stages
+        have = iFrame.InventoryFrame.frames[item].itemHave.get()
+        stage = self.item_list[item].bestStageId
+        runs = math.ceil((self.item_list[item].bestAp * count) / float(stages[stage]["apCost"]))
+        if runs != 0:
+            if self.item_list[item].flags == "Farming":
+                lastiid = self.farmingFrame.insert("", tk.END, image=self.item_list[item].icon,
+                                         values=(
+                                             self.item_list[item].name, count+int(have),
+                                             have,
+                                             self.item_list[item].bestAp,
+                                             self.item_list[item].bestStage,
+                                             runs,
+                                             stages[stage]["apCost"] * runs))
+            if self.item_list[item].flags == "Crafting":
+                for i in self.item_list[item].formula["costs"]:
+                    self.calc_cost(i["id"], i["count"]*count, lastiid)
+
+

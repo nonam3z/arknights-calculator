@@ -56,11 +56,15 @@ class CalculateFrame(tk.Frame):
         """
         self.item_list = ADP.Inventory().inventory
         for item in self.item_list.values():
-            icon = Image.open("items/" + item.iconId + ".png")
-            icon.thumbnail((20, 20), Image.ANTIALIAS)
-            icon = ImageTk.PhotoImage(icon)
-            item.icon = icon
             item.have = iFrame.InventoryFrame.frames[item.itemId].itemHave.get()
+            try:
+                icon = Image.open("items/" + item.iconId + ".png")
+                icon.thumbnail((20, 20), Image.ANTIALIAS)
+                icon = ImageTk.PhotoImage(icon)
+                item.icon = icon
+            except FileNotFoundError:
+                print("File with id " + item.iconId + " not found, skipping...")
+                item.icon = None
         return None
 
     def create_path(self, results):
@@ -93,7 +97,7 @@ class CalculateFrame(tk.Frame):
         data = results.copy()
         if results:
             for i in results:
-                if results[i] < int(self.item_list[i].have):
+                if results[i] <= int(self.item_list[i].have):
                     data.pop(i)
                 if results[i] > int(self.item_list[i].have):
                     data[i] = results[i] - int(self.item_list[i].have)

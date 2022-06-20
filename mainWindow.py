@@ -8,6 +8,7 @@ import ArknightsDataParser
 import calculateFrame
 import farmingFrame
 import inventoryFrame as iFrame
+import itemDataFrame
 import plannerFrame
 
 
@@ -58,6 +59,8 @@ class Application(tk.Frame):
         self.farming = farmingFrame.FarmingFrame(self)
         self.tabs.add(self.farming, text="Farming Calculator")
         self.settings = ArknightsDataParser.Settings()
+        self.itemData = itemDataFrame.ItemDataFrame(self)
+        self.tabs.add(self.itemData, text="Item Data")
 
         self.menu = tk.Menu(self, tearoff=False)
         self.master.config(menu=self.menu)
@@ -128,7 +131,8 @@ class Application(tk.Frame):
         json.dump(data, file, cls=EarEncoder, indent=4)
         file.close()
 
-    def save_settings(self):
+    @staticmethod
+    def save_settings():
         settings_obj = ArknightsDataParser.Settings()
         if os.path.exists("settings.json"):
             os.remove("settings.json")

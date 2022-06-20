@@ -6,7 +6,7 @@ from tkinter import ttk
 import win32clipboard
 from PIL import Image, ImageTk
 
-import ArknightsDataParser
+import ArknightsDataParser as ADP
 import inventoryFrame as iFrame
 import plannerPanels
 
@@ -27,12 +27,13 @@ class Planner(tk.Frame):
         self.allEarsList = {}
         self.list = {}
         self.path = {}
+        self.item_list = {}
 
         self.style = ttk.Style()
 
         self.selectOperator = ttk.Combobox(self)
         self.selectOperator.insert(0, "Nearl")
-        self.selectOperator["values"] = ArknightsDataParser.return_list_of_ears()
+        self.selectOperator["values"] = ADP.return_list_of_ears()
         self.selectOperator.grid(row=0, columnspan=2, padx=3, pady=(3, 10), sticky="ew")
         self.selectOperator.bind("<<ComboboxSelected>>", self.set_max_lvls)
 
@@ -117,7 +118,7 @@ class Planner(tk.Frame):
         excludes_dict = {}
         items = []
         for i in results:
-            items.append({'id': i, 'need': results.get(i, 0), 'have': 0})
+            items.append({'id': i, 'need': results.get(i, 0), 'have': iFrame.InventoryFrame.frames[i].itemHave.get()})
         items_dict.setdefault("items", items)
         excludes_dict.setdefault("excludes", excludes)
         penguin_export.update(json_data)
@@ -160,11 +161,12 @@ class Planner(tk.Frame):
         :param event: Принимает на вход event.
         """
         results = self.calculate()
+        self.item_list = ADP.Inventory().inventory
         for data in results:
             self.list[data] = {}
             self.list[data]["itemId"] = data
-            self.list[data]["name"] = ArknightsDataParser.Item(data).name
-            self.list[data]["iconId"] = ArknightsDataParser.Item(data).iconId
+            self.list[data]["name"] = self.item_list[data].name
+            self.list[data]["iconId"] = self.item_list[data].iconId
             icon = Image.open("items/" + self.list[data]["iconId"] + ".png")
             icon.thumbnail((20, 20), Image.ANTIALIAS)
             icon = ImageTk.PhotoImage(icon)
@@ -191,16 +193,16 @@ class Planner(tk.Frame):
                 self.earsList.delete(ear.iid)
                 self.allEarsList.pop(name)
                 iid = self.earsList.insert("", tk.END, values=(self.selectOperator.get(), results))
-                operator = ArknightsDataParser.OperatorState(iid, self.selectOperator.get(),
-                                                             self.currentStats.construct_op(),
-                                                             self.desiredStats.construct_op())
+                operator = ADP.OperatorState(iid, self.selectOperator.get(),
+                                             self.currentStats.construct_op(),
+                                             self.desiredStats.construct_op())
                 self.allEarsList.setdefault(operator.name)
                 self.allEarsList[operator.name] = operator
             else:
                 iid = self.earsList.insert("", tk.END, values=(self.selectOperator.get(), results))
-                operator = ArknightsDataParser.OperatorState(iid, self.selectOperator.get(),
-                                                             self.currentStats.construct_op(),
-                                                             self.desiredStats.construct_op())
+                operator = ADP.OperatorState(iid, self.selectOperator.get(),
+                                             self.currentStats.construct_op(),
+                                             self.desiredStats.construct_op())
                 self.allEarsList.setdefault(operator.name)
                 self.allEarsList[operator.name] = operator
         # self.create_path_list()
@@ -253,7 +255,7 @@ class Planner(tk.Frame):
         Выполняет установку ограничений для полей ввода параметров ушки.
         :param event: Принимает на вход event.
         """
-        ear = ArknightsDataParser.Operator(self.selectOperator.get())
+        ear = ADP.Operator(self.selectOperator.get())
         self.currentStats.clear_spinboxes()
         self.desiredStats.clear_spinboxes()
         self.currentStats.callback()

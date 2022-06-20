@@ -10,11 +10,12 @@ def save_data():
     root.destroy()
 
 
-root = tk.Tk()
-Grid.rowconfigure(root, 0, weight=1)
-Grid.columnconfigure(root, 0, weight=1)
-app = mainWindow.Application(master=root)
-app.restore_data()
-app.update_data()
-root.protocol("WM_DELETE_WINDOW", save_data)
-app.mainloop()
+if __name__ == "__main__":
+    root = tk.Tk()
+    Grid.rowconfigure(root, 0, weight=1)
+    Grid.columnconfigure(root, 0, weight=1)
+    app = mainWindow.Application(master=root)
+    app.restore_data()
+    app.update_data()
+    root.protocol("WM_DELETE_WINDOW", save_data)
+    app.mainloop()

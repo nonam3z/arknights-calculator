@@ -50,22 +50,20 @@ def update_script(rep):
     """
     Создание/обновление базы данных для работы программы.
     """
-    # os.makedirs("jsons", exist_ok=True)
-    # session = requests.session()
-    # session.proxies = getproxies()
-    # print("Getting characters data...")
-    # get_file_from_github("character_table", rep)
-    # print("Getting items data...")
-    # get_file_from_github("item_table", rep)
-    # print("Getting formulas data...")
-    # get_file_from_github("building_data", rep)
-    # print("Getting game constants...")
-    # get_file_from_github("gamedata_const", rep)
-    # print("Getting stages data...")
-    # get_file_from_github("stage_table", rep)
-    # print("Getting matrix data...")
-    # get_penguin_data(rep)
-    # print("Download complete!")
+    os.makedirs("jsons", exist_ok=True)
+    print("Getting characters data...")
+    get_file_from_github("character_table", rep)
+    print("Getting items data...")
+    get_file_from_github("item_table", rep)
+    print("Getting formulas data...")
+    get_file_from_github("building_data", rep)
+    print("Getting game constants...")
+    get_file_from_github("gamedata_const", rep)
+    print("Getting stages data...")
+    get_file_from_github("stage_table", rep)
+    print("Getting matrix data...")
+    get_penguin_data(rep)
+    print("Download complete!")
 
 
 class Singleton(type):
@@ -97,6 +95,7 @@ class FileRepository:
             update_script(rep)
             self.load_files(rep)
         except FileNotFoundError as error:
+            print("Database is corrupted or missing, redownloading...")
             update_script(rep)
             self.load_files(rep)
 
@@ -144,6 +143,8 @@ class Inventory:
                 self.inventory[item["itemId"]] = Item(item["itemId"])
         self.inventory = self.calc_flags(self.inventory)
         self.inventory = self.add_some_shitty_formulas(self.inventory)
+        for item in self.inventory.values():
+            self.inventory[item.itemId].name = self.corr_names(item.itemId)
 
     @staticmethod
     def calc_flags(inv):
@@ -175,6 +176,17 @@ class Inventory:
                 item.bestStage = "AP-5"
                 item.bestStageId = "wk_toxic_5"
         return inv
+
+    def corr_names(self, itemid):
+        name = ""
+        items = json.load(open("jsons/en_US/item_table.json", encoding='utf-8'))
+        for item in items["items"].values():
+            if item["itemId"] == itemid:
+                name = item["name"]
+                break
+            else:
+                name = self.inventory[itemid].name
+        return name
 
 
 def return_list_of_ears():

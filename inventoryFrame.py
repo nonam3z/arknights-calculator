@@ -53,12 +53,16 @@ class InventoryFrame(tk.Frame):
             item.itemName.configure(text=k.name, justify="right", anchor="e")
             item.itemHave.insert(0, "0")
             item.iconId = k.iconId
-            item.icon = Image.open("items/" + k.iconId + ".png")
-            item.icon.thumbnail((40, 40), Image.ANTIALIAS)
-            item.icon = ImageTk.PhotoImage(item.icon)
-            item.itemIcon.create_image(10, 5, anchor="nw", image=item.icon)
             InventoryFrame.frames.setdefault(item.itemId)
             InventoryFrame.frames[item.itemId] = item
+            try:
+                item.icon = Image.open("items/" + k.iconId + ".png")
+                item.icon.thumbnail((40, 40), Image.ANTIALIAS)
+                item.icon = ImageTk.PhotoImage(item.icon)
+                item.itemIcon.create_image(10, 5, anchor="nw", image=item.icon)
+            except FileNotFoundError:
+                print("File with id " + item.iconId + " not found, skipping...")
+                item.icon = None
 
         n = 0
         m = 0

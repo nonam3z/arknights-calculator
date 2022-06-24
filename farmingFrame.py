@@ -27,6 +27,8 @@ class FarmingFrame(tk.Frame):
         self.label.grid(column=0, row=0, sticky="ew")
         self.text.set("Total sanity cost: 0")
 
+        self.bind("<Visibility>", self.on_visibility)
+
         self.farmingFrame = ttk.Treeview(self, columns=["name", "need", "have", "cost", "stage", "runs", "sanity"])
         self.farmingFrame.grid(column=0, row=1, sticky="nsew")
         self.farmingFrame.column("#0", stretch=False, width=150)
@@ -55,7 +57,6 @@ class FarmingFrame(tk.Frame):
         """
         self.item_list = ADP.Inventory().inventory
         for item in self.item_list.values():
-            item.have = iFrame.InventoryFrame.frames[item.itemId].itemHave.get()
             try:
                 icon = Image.open("items/" + item.iconId + ".png")
                 icon.thumbnail((20, 20), Image.ANTIALIAS)
@@ -108,4 +109,6 @@ class FarmingFrame(tk.Frame):
                 for i in self.item_list[item].formula["costs"]:
                     self.calc_cost(i["id"], i["count"]*count, lastiid)
 
-
+    def on_visibility(self, event):
+        self.master.planner.calculate()
+        self.update()

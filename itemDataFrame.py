@@ -2,7 +2,9 @@ import tkinter as tk
 from tkinter import *
 from tkinter import ttk
 
-import ArknightsDataParser
+from PIL import Image, ImageTk
+
+import ArknightsDataParser as ADP
 
 
 class ItemDataFrame(tk.Frame):
@@ -18,7 +20,6 @@ class ItemDataFrame(tk.Frame):
         self.item_list = {}
         self.farming_data = {}
         self.crafting_data = {}
-        self.inventory = ArknightsDataParser.Inventory().inventory
 
         self.text = StringVar()
         self.label = tk.Label(self, justify="left", textvariable=self.text)
@@ -38,7 +39,27 @@ class ItemDataFrame(tk.Frame):
         self.itemData.column("flags", stretch=True, width=70)
         self.itemData.heading("flags", text="Flags", anchor="center")
 
-        for item in self.inventory.values():
-            self.itemData.insert("", tk.END,
-                                 values=(item.name, item.bestAp, item.craftingAp, item.flags))
+        self.create_item_list()
+        self.create_info()
 
+    def create_item_list(self):
+        """
+        Создает список предметов с иконками для дальнейшей отрисовки таблицы.
+        :return: Ничего не возвращает.
+        """
+        self.item_list = ADP.Inventory().inventory
+        for item in self.item_list.values():
+            try:
+                icon = Image.open("items/" + item.iconId + ".png")
+                icon.thumbnail((20, 20), Image.ANTIALIAS)
+                icon = ImageTk.PhotoImage(icon)
+                item.icon = icon
+            except FileNotFoundError:
+                print("File with id " + item.iconId + " not found, skipping...")
+                item.icon = None
+        return None
+
+    def create_info(self):
+        for item in self.item_list.values():
+            self.itemData.insert("", tk.END, image=item.icon,
+                                 values=(item.name, item.bestAp, item.craftingAp, item.flags))

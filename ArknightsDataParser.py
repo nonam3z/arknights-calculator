@@ -50,20 +50,20 @@ def update_script(rep):
     """
     Создание/обновление базы данных для работы программы.
     """
-    os.makedirs("jsons", exist_ok=True)
-    print("Getting characters data...")
-    get_file_from_github("character_table", rep)
-    print("Getting items data...")
-    get_file_from_github("item_table", rep)
-    print("Getting formulas data...")
-    get_file_from_github("building_data", rep)
-    print("Getting game constants...")
-    get_file_from_github("gamedata_const", rep)
-    print("Getting stages data...")
-    get_file_from_github("stage_table", rep)
-    print("Getting matrix data...")
-    get_penguin_data(rep)
-    print("Download complete!")
+    # os.makedirs("jsons", exist_ok=True)
+    # print("Getting characters data...")
+    # get_file_from_github("character_table", rep)
+    # print("Getting items data...")
+    # get_file_from_github("item_table", rep)
+    # print("Getting formulas data...")
+    # get_file_from_github("building_data", rep)
+    # print("Getting game constants...")
+    # get_file_from_github("gamedata_const", rep)
+    # print("Getting stages data...")
+    # get_file_from_github("stage_table", rep)
+    # print("Getting matrix data...")
+    # get_penguin_data(rep)
+    # print("Download complete!")
 
 
 class Singleton(type):
@@ -132,7 +132,7 @@ class Database(metaclass=Singleton):
         self.stages = self.data.stages
 
 
-class Inventory:
+class Inventory(metaclass=Singleton):
     def __init__(self):
         self.inventory = {}
         self.data = Database()

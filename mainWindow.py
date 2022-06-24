@@ -178,7 +178,10 @@ class Application(tk.Frame):
                                                          name, self.planner.create_upgrade_string(current, desired)),
                                                      iid=iid)
                     for item in savedata["inventory"].values():
-                        iFrame.InventoryFrame.frames[item["itemId"]].itemHave.set(int(item["have"]))
+                        try:
+                            iFrame.InventoryFrame.frames[item["itemId"]].itemHave.set(int(item["have"]))
+                        except KeyError:
+                            pass
             else:
                 return None
 
@@ -195,3 +198,4 @@ class Application(tk.Frame):
         data.gameconst = data.data.gameconst
         data.materials = data.data.materials
         data.stages = data.data.stages
+        data.inventory = ArknightsDataParser.Inventory().inventory

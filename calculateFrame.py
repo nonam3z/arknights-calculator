@@ -28,6 +28,8 @@ class CalculateFrame(tk.Frame):
         self.label.grid(column=0, row=0, sticky="ew")
         self.text.set("Total sanity cost: 0")
 
+        self.bind("<Visibility>", self.on_visibility)
+
         self.calculateFrame = ttk.Treeview(self, columns=["name", "need", "have", "cost", "runs", "stage"])
         self.calculateFrame.grid(column=0, row=1, sticky="nsew")
         self.calculateFrame.column("#0", stretch=False, width=150)
@@ -56,7 +58,6 @@ class CalculateFrame(tk.Frame):
         """
         self.item_list = ADP.Inventory().inventory
         for item in self.item_list.values():
-            item.have = iFrame.InventoryFrame.frames[item.itemId].itemHave.get()
             try:
                 icon = Image.open("items/" + item.iconId + ".png")
                 icon.thumbnail((20, 20), Image.ANTIALIAS)
@@ -153,3 +154,7 @@ class CalculateFrame(tk.Frame):
         self.text.set("Total sanity cost: " + str(total_cost) + ", ETA without Prime: " + str(
             total_cost / 240) + " day(s)" + ", ETA with Prime: " + str(total_cost / 300) + " day(s).")
         return None
+
+    def on_visibility(self, event):
+        self.master.planner.calculate()
+        self.update()

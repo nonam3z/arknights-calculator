@@ -1,7 +1,6 @@
 import json
 import math
 import os
-from urllib.request import urlretrieve
 
 import requests
 
@@ -13,15 +12,15 @@ def get_file_from_github(filename, rep):
     :param rep: Принимает на вход репозиторий.
     """
     repository = "https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/" + str(rep) + "/gamedata/excel/"
-    data = (repository + filename + ".json")
+    url = (repository + filename + ".json")
     os.makedirs(("jsons/" + rep + "/"), exist_ok=True)
     file = ("jsons/" + rep + "/" + filename + ".json")
     try:
         os.remove(file)
     except OSError as error:
         pass
-    open(file, 'w+')
-    urlretrieve(data, file)
+    data = requests.get(url=url).json()
+    open(file, 'w+').write(json.dumps(data))
 
 
 def get_penguin_data(rep):
@@ -50,20 +49,20 @@ def update_script(rep):
     """
     Создание/обновление базы данных для работы программы.
     """
-    # os.makedirs("jsons", exist_ok=True)
-    # print("Getting characters data...")
-    # get_file_from_github("character_table", rep)
-    # print("Getting items data...")
-    # get_file_from_github("item_table", rep)
-    # print("Getting formulas data...")
-    # get_file_from_github("building_data", rep)
-    # print("Getting game constants...")
-    # get_file_from_github("gamedata_const", rep)
-    # print("Getting stages data...")
-    # get_file_from_github("stage_table", rep)
-    # print("Getting matrix data...")
-    # get_penguin_data(rep)
-    # print("Download complete!")
+    os.makedirs("jsons", exist_ok=True)
+    print("Getting characters data...")
+    get_file_from_github("character_table", rep)
+    print("Getting items data...")
+    get_file_from_github("item_table", rep)
+    print("Getting formulas data...")
+    get_file_from_github("building_data", rep)
+    print("Getting game constants...")
+    get_file_from_github("gamedata_const", rep)
+    print("Getting stages data...")
+    get_file_from_github("stage_table", rep)
+    print("Getting matrix data...")
+    get_penguin_data(rep)
+    print("Download complete!")
 
 
 class Singleton(type):
@@ -104,10 +103,9 @@ class FileRepository:
         self.items = json.load(open("jsons/" + rep + "/item_table.json", encoding='utf-8'))
         self.formulas = json.load(open("jsons/" + rep + "/building_data.json", encoding='utf-8'))
         self.gameconst = json.load(open("jsons/" + rep + "/gamedata_const.json", encoding='utf-8'))
-        self.materials = json.load(open("jsons/" + rep + "/materials.json", encoding='utf-8'))
-        self.materials = self.materials["matrix"]
-        self.stages = json.load(open("jsons/" + rep + "/stage_table.json", encoding='utf-8'))
-        self.stages = self.stages["stages"]
+        self.materials = json.load(open("jsons/" + rep + "/materials.json", encoding='utf-8'))["matrix"]
+        self.stages = json.load(open("jsons/" + rep + "/stage_table.json", encoding='utf-8'))["stages"]
+        pass
 
 
 class Savedata:
@@ -135,8 +133,8 @@ class Database(metaclass=Singleton):
 class Inventory(metaclass=Singleton):
     def __init__(self):
         self.inventory = {}
-        self.data = Database()
-        for item in self.data.items["items"].values():
+        data = Database()
+        for item in data.items["items"].values():
             if item["itemId"] in ["4001", "5001", "32001", "4006"]:
                 self.inventory[item["itemId"]] = Item(item["itemId"])
             if item["classifyType"] == "MATERIAL" and item["itemType"] == "MATERIAL" and not item["obtainApproach"]:

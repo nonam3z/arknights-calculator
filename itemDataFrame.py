@@ -60,6 +60,7 @@ class ItemDataFrame(tk.Frame):
         return None
 
     def create_info(self):
+        ignore = ["数据增补仪", "数据增补条"]
         for item in self.item_list.values():
-            self.itemData.insert("", tk.END, image=item.icon,
-                                 values=(item.name, item.bestAp, item.craftingAp, item.flags))
+            if item.name not in ignore:
+                self.itemData.insert("", tk.END, image=item.icon, values=(item.name, item.bestAp, item.craftingAp, item.flags))

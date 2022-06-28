@@ -1,7 +1,9 @@
+import datetime
 import json
 import math
 import os
 
+import github
 import requests
 
 
@@ -15,10 +17,8 @@ def get_file_from_github(filename, rep):
     url = (repository + filename + ".json")
     os.makedirs(("jsons/" + rep + "/"), exist_ok=True)
     file = ("jsons/" + rep + "/" + filename + ".json")
-    try:
+    if os.path.exists(file):
         os.remove(file)
-    except OSError as error:
-        pass
     data = requests.get(url=url).json()
     open(file, 'w+').write(json.dumps(data))
 
@@ -35,34 +35,52 @@ def get_penguin_data(rep):
         server = servers[reps.index(rep)]
     else:
         server = "US"
-    try:
+    if os.path.exists(file):
         os.remove(file)
-    except OSError as error:
-        pass
     PARAMS = {"server": server, "show_closed_zones": False}
     data = str(requests.get(url=repository, params=PARAMS).content)
     data = data[2:-1:]
     open(file, 'w+').write(data)
 
 
-def update_script(rep):
+def update_script(rep, force):
     """
     Создание/обновление базы данных для работы программы.
     """
-    os.makedirs("jsons", exist_ok=True)
-    print("Getting characters data...")
-    get_file_from_github("character_table", rep)
-    print("Getting items data...")
-    get_file_from_github("item_table", rep)
-    print("Getting formulas data...")
-    get_file_from_github("building_data", rep)
-    print("Getting game constants...")
-    get_file_from_github("gamedata_const", rep)
-    print("Getting stages data...")
-    get_file_from_github("stage_table", rep)
+    date_github = check_github_last_update(rep)
+    if os.path.exists("jsons/" + rep):
+        date_file = datetime.datetime.fromtimestamp(os.path.getmtime(("jsons/" + rep)))
+    else:
+        date_file = datetime.datetime.now()
+    print(str(date_github) + " // git -- file // " + str(date_file) + " // rep: " + rep)
+    bool_check = date_github > date_file
+    print("Check git > file: " + str(bool_check))
+    if (date_github > date_file) or (force == True):
+        os.makedirs("jsons", exist_ok=True)
+        print("Getting characters data...")
+        get_file_from_github("character_table", rep)
+        print("Getting items data...")
+        get_file_from_github("item_table", rep)
+        print("Getting formulas data...")
+        get_file_from_github("building_data", rep)
+        print("Getting game constants...")
+        get_file_from_github("gamedata_const", rep)
+        print("Getting stages data...")
+        get_file_from_github("stage_table", rep)
     print("Getting matrix data...")
     get_penguin_data(rep)
-    print("Download complete!")
+    print("Update complete!")
+
+
+def check_github_last_update(rep):
+    try:
+        g = github.Github()
+        repo = g.get_repo("Aceship/AN-EN-Tags")
+        commits = repo.get_commits(path=("json/gamedata/" + rep + "/gamedata"))
+        date = commits[0].commit.committer.date
+    except github.GithubException:
+        date = datetime.datetime.fromtimestamp(0)
+    return date
 
 
 class Singleton(type):
@@ -91,11 +109,11 @@ class FileRepository:
             for file_name in os.listdir("jsons/" + rep):
                 if os.path.isfile("jsons/" + rep + "/" + file_name):
                     os.remove("jsons/" + rep + "/" + file_name)
-            update_script(rep)
+            update_script(rep, True)
             self.load_files(rep)
         except FileNotFoundError as error:
             print("Database is corrupted or missing, redownloading...")
-            update_script(rep)
+            update_script(rep, True)
             self.load_files(rep)
 
     def load_files(self, rep):
@@ -141,8 +159,9 @@ class Inventory(metaclass=Singleton):
                 self.inventory[item["itemId"]] = Item(item["itemId"])
         self.inventory = self.calc_flags(self.inventory)
         self.inventory = self.add_some_shitty_formulas(self.inventory)
-        for item in self.inventory.values():
-            self.inventory[item.itemId].name = self.corr_names(item.itemId)
+        if os.path.exists("jsons/en_US/item_table.json"):
+            for item in self.inventory.values():
+                self.inventory[item.itemId].name = self.corr_names(item.itemId)
 
     @staticmethod
     def calc_flags(inv):

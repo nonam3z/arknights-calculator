@@ -48,17 +48,17 @@ class Planner(tk.Frame):
         self.leftButtonsFrame.columnconfigure(0, weight=1)
         self.leftButtonsFrame.columnconfigure(1, weight=1)
 
-        self.buttonAdd = tk.Button(self.leftButtonsFrame, text="Add Operator", command=self.add_ear_to_list)
+        self.buttonAdd = ttk.Button(self.leftButtonsFrame, text="Add Operator", command=self.add_ear_to_list)
         self.buttonAdd.grid(column=0, row=0, sticky="ew")
-        self.buttonDelete = tk.Button(self.leftButtonsFrame, text="Delete Operator", command=self.del_ear_from_list)
+        self.buttonDelete = ttk.Button(self.leftButtonsFrame, text="Delete Operator", command=self.del_ear_from_list)
         self.buttonDelete.grid(column=1, row=0, sticky="ew")
 
         self.rightButtonsFrame = tk.Frame(self)
         self.rightButtonsFrame.grid(column=1, row=2, sticky="ew", pady=(6, 0), padx=(3, 0))
         self.rightButtonsFrame.columnconfigure(0, weight=1)
 
-        self.buttonCalculate = tk.Button(self.rightButtonsFrame, text="Create Export to Penguin",
-                                         command=self.calculate_button)
+        self.buttonCalculate = ttk.Button(self.rightButtonsFrame, text="Create Export to Penguin",
+                                          command=self.calculate_button)
         self.buttonCalculate.grid(column=0, row=0, sticky="ew")
 
         self.rightFrame = tk.Frame(self)
@@ -258,8 +258,8 @@ class Planner(tk.Frame):
         ear = ADP.Operator(self.selectOperator.get())
         self.currentStats.clear_spinboxes()
         self.desiredStats.clear_spinboxes()
-        self.currentStats.callback()
-        self.desiredStats.callback()
+        self.currentStats.callback("<Current stats update.>")
+        self.desiredStats.callback("<Desired stats update.>")
         self.skills_counter(ear.ear["skills"])
 
     def skills_counter(self, skills):

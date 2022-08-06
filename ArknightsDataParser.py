@@ -1,74 +1,241 @@
+import datetime
 import json
 import math
-from urllib.request import urlretrieve
 import os
 
-os.makedirs("jsons", exist_ok=True)
-
-import inventoryFrame as iFrame
-
-
-def get_file_from_github(filename):
-    repository = "https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/en_US/gamedata/excel/"
-    data = (repository + filename + ".json")
-    file = ("jsons/" + filename + ".json")
-    os.remove(file)
-    open(file, 'w+')
-    urlretrieve(data, file)
+import github
+import requests
 
 
-def get_penguin_data():
-    repository = "https://penguin-stats.io/PenguinStats/api/v2/result/matrix?show_closed_zones=false&server=US"
-    file = "jsons/materials.json"
-    os.remove(file)
-    open(file, 'w+')
-    urlretrieve(repository, file)
+def get_file_from_github(filename, rep):
+    """
+    Метод для получения файлов из репозитория github.
+    :param filename: Принимает на вход имя файла.
+    :param rep: Принимает на вход репозиторий.
+    """
+    repository = "https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/" + str(rep) + "/gamedata/excel/"
+    url = (repository + filename + ".json")
+    os.makedirs(("jsons/" + rep + "/"), exist_ok=True)
+    file = ("jsons/" + rep + "/" + filename + ".json")
+    if os.path.exists(file):
+        os.remove(file)
+    data = requests.get(url=url).json()
+    open(file, 'w+').write(json.dumps(data))
 
 
-def update_script():
-    print("Getting characters data...")
-    get_file_from_github("character_table")
-    print("Getting items data...")
-    get_file_from_github("item_table")
-    print("Getting formulas data...")
-    get_file_from_github("building_data")
-    print("Getting game constants...")
-    get_file_from_github("gamedata_const")
-    print("Getting stages data...")
-    get_file_from_github("stage_table")
-    print("Download complete!")
-    # get_penguin_data()
+def get_penguin_data(rep):
+    """
+    Метод для получения матрицы стоимости и частоты выпадения материалов с Penguin Statistics.
+    """
+    repository = "https://penguin-stats.io/PenguinStats/api/v2/result/matrix"
+    file = "jsons/" + rep + "/materials.json"
+    reps = ["en_US", "zh_CN", "ja_JP", "ko_KR", "zh_TW"]
+    servers = ["US", "CN", "JP", "KR", "CN"]
+    if rep in reps:
+        server = servers[reps.index(rep)]
+    else:
+        server = "US"
+    if os.path.exists(file):
+        os.remove(file)
+    PARAMS = {"server": server, "show_closed_zones": False}
+    data = str(requests.get(url=repository, params=PARAMS).content)
+    data = data[2:-1:]
+    open(file, 'w+').write(data)
 
 
-# update_script()
+def update_script(rep, force):
+    """
+    Создание/обновление базы данных для работы программы.
+    """
+    date_github = check_github_last_update(rep)
+    if os.path.exists("jsons/" + rep):
+        date_file = datetime.datetime.fromtimestamp(os.path.getmtime(("jsons/" + rep)))
+    else:
+        date_file = datetime.datetime.now()
+    print(str(date_github) + " // git -- file // " + str(date_file) + " // rep: " + rep)
+    bool_check = date_github > date_file
+    print("Check git > file: " + str(bool_check))
+    if (date_github > date_file) or (force == True):
+        os.makedirs("jsons", exist_ok=True)
+        print("Getting characters data...")
+        get_file_from_github("character_table", rep)
+        print("Getting items data...")
+        get_file_from_github("item_table", rep)
+        print("Getting formulas data...")
+        get_file_from_github("building_data", rep)
+        print("Getting game constants...")
+        get_file_from_github("gamedata_const", rep)
+        print("Getting stages data...")
+        get_file_from_github("stage_table", rep)
+    print("Getting matrix data...")
+    get_penguin_data(rep)
+    print("Update complete!")
 
 
-ears = json.load(open("jsons/character_table.json", encoding='utf-8'))
-items = json.load(open("jsons/item_table.json", encoding='utf-8'))
-formulas = json.load(open("jsons/building_data.json", encoding='utf-8'))
-gameconst = json.load(open("jsons/gamedata_const.json", encoding='utf-8'))
-materials = json.load(open("jsons/materials.json", encoding='utf-8'))
-stages = json.load(open("jsons/stage_table.json", encoding='utf-8'))
-materials = materials["matrix"]
-stages = stages["stages"]
+def check_github_last_update(rep):
+    try:
+        g = github.Github()
+        repo = g.get_repo("Aceship/AN-EN-Tags")
+        commits = repo.get_commits(path=("json/gamedata/" + rep + "/gamedata"))
+        date = commits[0].commit.committer.date
+    except github.GithubException:
+        date = datetime.datetime.fromtimestamp(0)
+    return date
 
+
+class Singleton(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+    def clear(cls):
+        cls._instances = {}
+
+
+class FileRepository:
+    def __init__(self, rep):
+        self.ears = {}
+        self.items = {}
+        self.formulas = {}
+        self.gameconst = {}
+        self.materials = {}
+        self.stages = {}
+        try:
+            self.load_files(rep)
+        except json.JSONDecodeError as error:
+            for file_name in os.listdir("jsons/" + rep):
+                if os.path.isfile("jsons/" + rep + "/" + file_name):
+                    os.remove("jsons/" + rep + "/" + file_name)
+            update_script(rep, True)
+            self.load_files(rep)
+        except FileNotFoundError as error:
+            print("Database is corrupted or missing, redownloading...")
+            update_script(rep, True)
+            self.load_files(rep)
+
+    def load_files(self, rep):
+        self.ears = json.load(open("jsons/" + rep + "/character_table.json", encoding='utf-8'))
+        self.items = json.load(open("jsons/" + rep + "/item_table.json", encoding='utf-8'))
+        self.formulas = json.load(open("jsons/" + rep + "/building_data.json", encoding='utf-8'))
+        self.gameconst = json.load(open("jsons/" + rep + "/gamedata_const.json", encoding='utf-8'))
+        self.materials = json.load(open("jsons/" + rep + "/materials.json", encoding='utf-8'))["matrix"]
+        self.stages = json.load(open("jsons/" + rep + "/stage_table.json", encoding='utf-8'))["stages"]
+        pass
+
+
+class Savedata:
+    def __init__(self):
+        self.savedata = json.load(open("savedata.json", encoding='utf-8'))
+
+
+class Settings(metaclass=Singleton):
+    def __init__(self):
+        self.repository = "en_US"
+
+
+class Database(metaclass=Singleton):
+    def __init__(self):
+        self.rep = Settings().repository
+        self.data = FileRepository(self.rep)
+        self.ears = self.data.ears
+        self.items = self.data.items
+        self.formulas = self.data.formulas
+        self.gameconst = self.data.gameconst
+        self.materials = self.data.materials
+        self.stages = self.data.stages
+
+
+class Inventory(metaclass=Singleton):
+    def __init__(self):
+        self.inventory = {}
+        data = Database()
+        for item in data.items["items"].values():
+            if item["itemId"] in ["4001", "5001", "32001", "4006"]:
+                self.inventory[item["itemId"]] = Item(item["itemId"])
+            if item["classifyType"] == "MATERIAL" and item["itemType"] == "MATERIAL" and not item["obtainApproach"]:
+                self.inventory[item["itemId"]] = Item(item["itemId"])
+        self.inventory = self.calc_flags(self.inventory)
+        self.inventory = self.add_some_shitty_formulas(self.inventory)
+        if os.path.exists("jsons/en_US/item_table.json"):
+            for item in self.inventory.values():
+                self.inventory[item.itemId].name = self.corr_names(item.itemId)
+
+    @staticmethod
+    def calc_flags(inv):
+        for item in inv.values():
+            if len(item.formula) > 0:
+                for i in item.formula["costs"]:
+                    item.craftingAp += inv[i["id"]].bestAp * i["count"]
+            if 0 < item.craftingAp < item.bestAp:
+                item.flags = "Crafting"
+            else:
+                item.flags = "Farming"
+        return inv
+
+    @staticmethod
+    def add_some_shitty_formulas(inv):
+        for item in inv.values():
+            if item.itemId == "4001":
+                item.bestAp = 0.004
+                item.bestStage = "CE-5"
+                item.bestStageId = "wk_melee_5"
+            elif item.itemId == "5001":
+                pass
+            elif item.itemId == "32001":
+                item.bestAp = 1350
+                item.formula = {"costs": []}
+                item.formula["costs"].append({"id": "4006", "count": 90, "type": "MATERIAL"})
+            elif item.itemId == "4006":
+                item.bestAp = 1.5
+                item.bestStage = "AP-5"
+                item.bestStageId = "wk_toxic_5"
+        return inv
+
+    def corr_names(self, itemid):
+        name = ""
+        items = json.load(open("jsons/en_US/item_table.json", encoding='utf-8'))
+        for item in items["items"].values():
+            if item["itemId"] == itemid:
+                name = item["name"]
+                break
+            else:
+                name = self.inventory[itemid].name
+        return name
 
 def return_list_of_ears():
+    """
+    Создание списка ушек для работы основного фрейма.
+    :return: Возращает список имен ушек в виде массива.
+    """
     earlist = []
-    for ear in ears.values():
-        if ear["displayNumber"]:
-            earlist.append(ear["name"])
+    data = Database()
+    if data.rep == "en_US":
+        for ear in data.ears.values():
+            if ear["displayNumber"]:
+                earlist.append(ear["name"])
+    else:
+        for ear in data.ears.values():
+            if ear["displayNumber"]:
+                earlist.append(ear["appellation"])
     earlist.sort()
     return earlist
 
 
 class Operator:
     def __init__(self, name):
-        ear = None
-        for ear in ears.values():
-            if ear["name"] == name:
-                self.ear = ear
-                break
+        self.data = Database()
+        for ear in self.data.ears.values():
+            if self.data.rep == "en_US":
+                if ear["name"] == name:
+                    self.ear = ear
+                    break
+            else:
+                if ear["appellation"] == name:
+                    self.ear = ear
+                    break
 
     def phase(self, phase):
         if len(self.ear["phases"]) > 0:
@@ -89,7 +256,7 @@ class Operator:
             return 1
 
     def cost(self, elite):
-        cost = gameconst["evolveGoldCost"][self.ear["rarity"]][elite - 1]
+        cost = self.data.gameconst["evolveGoldCost"][self.ear["rarity"]][elite - 1]
         if cost == -1:
             return 0
         else:
@@ -102,50 +269,48 @@ class Operator:
             return self.ear["phases"][elite]["evolveCost"]
 
 
-class Inventory:
-    def __init__(self):
-        self.items = {}
-        for item in items["items"].values():
-            if item["itemId"] == "4001" or item["itemId"] == "5001":
-                self.items[item["itemId"]] = Item(item["itemId"])
-            if item["classifyType"] == "MATERIAL" and item["itemType"] == "MATERIAL" and not item["obtainApproach"]:
-                self.items[item["itemId"]] = Item(item["itemId"])
-
-
 class Item:
     def __init__(self, itemid):
+        self.data = Database()
         item = None
-        for item in items["items"].values():
+        for item in self.data.items["items"].values():
             if item["itemId"] == itemid:
                 self.item = item
                 break
         self.name = item["name"]
         self.itemId = item["itemId"]
         self.iconId = item["iconId"]
+        self.icon = None
         self.rarity = item["rarity"]
         self.formula = []
         if item["buildingProductList"]:
             if item["buildingProductList"][0]["roomType"] == "WORKSHOP":
                 self.itemCraftingId = item["buildingProductList"][0]["formulaId"]
-                self.formula = formulas["workshopFormulas"][self.itemCraftingId]
+                self.formula = self.data.formulas["workshopFormulas"][self.itemCraftingId]
+            if item["buildingProductList"][0]["roomType"] == "MANUFACTURE":
+                self.itemCraftingId = item["buildingProductList"][0]["formulaId"]
+                self.formula = self.data.formulas["manufactFormulas"][self.itemCraftingId]
         self.stages = self.get_stages()
         self.bestAp = math.inf
+        self.craftingAp = 0
         self.bestStage = ""
+        self.bestStageId = ""
         self.calc_cost()
-        self.flags = self.calc_flags()
+        self.flags = ""
+        self.have = 0
 
     def get_stages(self):
         results = {}
-        for i in range(materials.__len__()):
-            stage = materials[i]
+        for i in range(self.data.materials.__len__()):
+            stage = self.data.materials[i]
             if stage["itemId"] == self.itemId:
                 results[stage["stageId"]] = stage
         return results
 
     def calc_cost(self):
         for stage in self.stages.values():
-            if stages.get(stage["stageId"]):
-                ap_cost = stages[stage["stageId"]]["apCost"]
+            if self.data.stages.get(stage["stageId"]):
+                ap_cost = self.data.stages[stage["stageId"]]["apCost"]
             else:
                 ap_cost = math.inf
             percentage = stage["quantity"] / stage["times"]
@@ -155,19 +320,14 @@ class Item:
                 best_ap = math.inf
             if best_ap < self.bestAp:
                 self.bestAp = best_ap
-                self.bestStage = stage["stageId"]
+                self.bestStage = self.data.stages[stage["stageId"]]["code"]
+                self.bestStageId = stage["stageId"]
         return None
-
-    def calc_flags(self):
-        flags = ""
-        return flags
-
-
-inventory = Inventory()
 
 
 class OperatorState:
     def __init__(self, iid, name, current, desired):
+        self.data = Database()
         self.iid = iid
         self.name = name
         self.operator = Operator(self.name)
@@ -190,7 +350,9 @@ class OperatorState:
             if self.current.elite < elite == self.desired.elite:
                 self.calc_needs(0, self.desired.level - 1, elite)
         for elite in range(self.current.elite, self.desired.elite):
-            self.cost["4001"] = self.cost.get("4001", 0) + gameconst["evolveGoldCost"][self.operator.ear["rarity"]][elite]
+            self.cost["4001"] = self.cost.get("4001", 0) + \
+                                self.data.gameconst["evolveGoldCost"][self.operator.ear["rarity"]][
+                                    elite]
             for i in self.return_results(elite + 1).items():
                 count = self.cost.get(i[0], 0)
                 self.cost[i[0]] = count + i[1]
@@ -223,8 +385,8 @@ class OperatorState:
 
     def calc_needs(self, lvlmin, lvlmax, elite):
         for level in range(lvlmin, lvlmax):
-            self.cost["5001"] = self.cost.get("5001", 0) + gameconst["characterExpMap"][elite][level]
-            self.cost["4001"] = self.cost.get("4001", 0) + gameconst["characterUpgradeCostMap"][elite][level]
+            self.cost["5001"] = self.cost.get("5001", 0) + self.data.gameconst["characterExpMap"][elite][level]
+            self.cost["4001"] = self.cost.get("4001", 0) + self.data.gameconst["characterUpgradeCostMap"][elite][level]
         return None
 
     def return_results(self, elite):

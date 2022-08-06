@@ -17,6 +17,9 @@ class InvPanel(tk.Frame):
         self.icon = ""
         # self.thumbnail = ""
 
+        self.vcmdInv = (self.register(self.validateInv), "%P", "%W")
+        self.ivcmd = (self.register(self.onInvalid), "%W", "%P")
+
         self.itemIcon = tk.Canvas(self, width=50, height=50)
         self.itemIcon.grid(row=1, column=0, sticky="nsew")
 
@@ -25,9 +28,35 @@ class InvPanel(tk.Frame):
 
         self.itemHave = ttk.Spinbox(self, from_=0, to=999999999)
         self.itemHave.grid(row=1, column=1)
+        self.itemHave.configure(validate="key", validatecommand=self.vcmdInv, invalidcommand=self.ivcmd)
 
-        # self.itemNeed = ttk.Spinbox(self)
-        # self.itemNeed.grid(row=2, column=1)
+    def validateInv(self, P, W):
+        widget = self.master.nametowidget(W)
+        _from = widget["from"]
+        _to = widget["to"]
+        try:
+            if P == "":
+                return True
+            if P.isdigit():
+                if _from <= int(P) <= _to:
+                    return True
+        except ValueError:
+            return False
+        return False
 
+    def onInvalid(self, W, P):
+        widget = self.master.nametowidget(W)
+        _from = widget["from"]
+        _to = widget["to"]
+        widget.delete(0, 99)
+        try:
+            if P.isdigit():
+                if int(P) >= _to:
+                    widget.insert(0, _to)
+                if int(P) <= _from:
+                    widget.insert(0, _from)
+            else:
+                widget.insert(0, _from)
+        except ValueError:
+            widget.insert(0, _from)
 
-None

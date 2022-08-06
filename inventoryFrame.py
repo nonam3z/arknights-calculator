@@ -77,3 +77,10 @@ class InventoryFrame(tk.Frame):
 
         for frame in InventoryFrame.frames.values():
             frame.tkraise()
+
+    @staticmethod
+    def create_item_list():
+        data = {}
+        for i in InventoryFrame.frames.values():
+            data.setdefault(i.itemId, i.itemHave.get())
+        return data

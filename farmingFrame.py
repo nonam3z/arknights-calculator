@@ -27,7 +27,7 @@ class FarmingFrame(tk.Frame):
         self.label.grid(column=0, row=0, sticky="ew")
         self.text.set("Total sanity cost: 0")
 
-        self.bind("<Visibility>", self.on_visibility)
+        self.bind("<FocusIn>", self.on_visibility)
 
         self.farmingFrame = ttk.Treeview(self, columns=["name", "need", "have", "cost", "stage", "runs", "sanity"])
         self.farmingFrame.grid(column=0, row=1, sticky="nsew")
@@ -67,7 +67,7 @@ class FarmingFrame(tk.Frame):
                 item.icon = None
         return None
 
-    def create_path(self, results, lastiid):
+    def create_path(self, results):
         """
         Создаем таблицу фарма материалов на основе матрицы stages и данных стоимости материалов.
         :param results: Принимает на вход словарик результатов из id предмета и count количества предмета.
@@ -82,32 +82,27 @@ class FarmingFrame(tk.Frame):
         if results:
             for item in results:
                 if item not in ignore:
-                    self.calc_cost(item, results[item], "")
+                    self.calc_cost(item, results[item])
         for child in self.farmingFrame.get_children():
-            # dbg = self.farmingFrame.item(child)
             total_cost = total_cost + int(self.farmingFrame.item(child)["values"][6])
         self.text.set("Total sanity cost: "+str(total_cost)+", ETA without Prime: "+str(total_cost/240)+", ETA with Prime: "+str(total_cost/300))
         return None
 
-    def calc_cost(self, item, count, lastiid):
+    def calc_cost(self, item, count):
         data = ADP.Database()
         stages = data.stages
         have = iFrame.InventoryFrame.frames[item].itemHave.get()
         stage = self.item_list[item].bestStageId
         runs = math.ceil((self.item_list[item].bestAp * count) / float(stages[stage]["apCost"]))
         if runs != 0:
-            if self.item_list[item].flags == "Farming":
-                lastiid = self.farmingFrame.insert("", tk.END, image=self.item_list[item].icon,
-                                         values=(
-                                             self.item_list[item].name, count+int(have),
-                                             have,
-                                             self.item_list[item].bestAp,
-                                             self.item_list[item].bestStage,
-                                             runs,
-                                             stages[stage]["apCost"] * runs))
-            if self.item_list[item].flags == "Crafting":
-                for i in self.item_list[item].formula["costs"]:
-                    self.calc_cost(i["id"], i["count"]*count, lastiid)
+            self.farmingFrame.insert("", tk.END, image=self.item_list[item].icon,
+                                     values=(
+                                         self.item_list[item].name, count,
+                                         have,
+                                         self.item_list[item].bestAp,
+                                         self.item_list[item].bestStage,
+                                         runs,
+                                         stages[stage]["apCost"] * runs))
 
     def on_visibility(self, event):
         self.master.planner.calculate()

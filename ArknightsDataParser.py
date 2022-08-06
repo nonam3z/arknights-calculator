@@ -205,7 +205,6 @@ class Inventory(metaclass=Singleton):
                 name = self.inventory[itemid].name
         return name
 
-
 def return_list_of_ears():
     """
     Создание списка ушек для работы основного фрейма.
@@ -298,7 +297,6 @@ class Item:
         self.bestStageId = ""
         self.calc_cost()
         self.flags = ""
-        self.need = 0
         self.have = 0
 
     def get_stages(self):

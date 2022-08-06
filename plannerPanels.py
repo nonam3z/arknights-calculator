@@ -24,7 +24,7 @@ class CalcPanel(tk.Frame):
         self.vcmdElite = (self.register(self.validateElite), "%P", "%W")
         self.vcmdLvl = (self.register(self.validateLvl), "%P", "%W")
         self.vcmdSkill = (self.register(self.validateSkill), "%P", "%W")
-        self.ivcmd = (self.register(self.onInvalid), "%W")
+        self.ivcmd = (self.register(self.onInvalid), "%W", "%P")
 
         self.selectElite = ttk.Spinbox(self, from_=0, to=2)
         self.selectElite.insert(0, "0")
@@ -102,11 +102,21 @@ class CalcPanel(tk.Frame):
             return False
         return False
 
-    def onInvalid(self, W):
+    def onInvalid(self, W, P):
         widget = self.master.nametowidget(W)
         _from = widget["from"]
+        _to = widget["to"]
         widget.delete(0, 9)
-        widget.insert(0, _from)
+        try:
+            if P.isdigit():
+                if int(P) >= _to:
+                    widget.insert(0, _to)
+                if int(P) <= _from:
+                    widget.insert(0, _from)
+            else:
+                widget.insert(0, _from)
+        except ValueError:
+            widget.insert(0, _from)
 
     def construct_op(self):
         """

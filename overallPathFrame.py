@@ -89,7 +89,6 @@ class CalculateFrame(tk.Frame):
                     materials = ADP.Inventory().inventory[itemId].formula["costs"]
                     for m in materials:
                         results.setdefault(m["id"], ({"itemId": m["id"], "need": need * m["count"],
-                                                      "have": 0,
                                                       "formulas": {}}))
                         if ADP.Inventory().inventory[m["id"]].formula:
                             results[m["id"]]["formulas"] = self.create_materials_tree(m["id"], results[m["id"]]["need"])
@@ -136,9 +135,9 @@ class CalculateFrame(tk.Frame):
                 self.crafting_data[item["itemId"]] = self.crafting_data[item["itemId"]] + item["need"]
             else:
                 self.crafting_data.setdefault(item["itemId"], item["need"])
-                if item["formulas"]:
-                    for mat in item["formulas"]:
-                        self.create_branch(item["formulas"][mat], lastIid)
+            if item["formulas"]:
+                for mat in item["formulas"]:
+                    self.create_branch(item["formulas"][mat], lastIid)
 
     def on_visibility(self, event):
         self.master.planner.calculate()

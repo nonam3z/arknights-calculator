@@ -155,7 +155,6 @@ class Planner(tk.Frame):
             results2 = results.copy()
             item_data = ADP.Inventory().inventory[item]
             results[item] = {"itemId": item, "need": int(results2.get(item)),
-                             "have": int(iFrame.InventoryFrame.frames[item].itemHave.get()),
                              "formulas": {}}
         return results
 

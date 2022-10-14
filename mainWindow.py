@@ -11,6 +11,7 @@ import inventoryFrame as iFrame
 import itemDataFrame
 import overallPathFrame
 import plannerFrame
+import stagesFrame
 
 
 class EarEncoder(json.JSONEncoder):
@@ -66,6 +67,8 @@ class Application(tk.Frame):
         self.tabs.add(self.crafting, text="Crafting Calculator")
         self.itemData = itemDataFrame.ItemDataFrame(self)
         self.tabs.add(self.itemData, text="Item Data")
+        self.stages = stagesFrame.StagesFrame(self)
+        self.tabs.add(self.stages, text="Stages List")
 
         self.menu = tk.Menu(self, tearoff=False)
         self.master.config(menu=self.menu)

@@ -5,10 +5,11 @@ from tkinter import messagebox
 from tkinter import ttk
 
 import ArknightsDataParser as ADP
-import calculateFrame
+import craftingFrame
 import farmingFrame
 import inventoryFrame as iFrame
 import itemDataFrame
+import overallPathFrame
 import plannerFrame
 
 
@@ -57,10 +58,12 @@ class Application(tk.Frame):
         self.tabs.add(self.planner, text="Planner")
         self.inventory = iFrame.InventoryFrame(self)
         self.tabs.add(self.inventory, text="Inventory Depot")
-        self.calculator = calculateFrame.CalculateFrame(self)
+        self.calculator = overallPathFrame.CalculateFrame(self)
         self.tabs.add(self.calculator, text="Path Calculator")
         self.farming = farmingFrame.FarmingFrame(self)
         self.tabs.add(self.farming, text="Farming Calculator")
+        self.crafting = craftingFrame.CraftingFrame(self)
+        self.tabs.add(self.crafting, text="Crafting Calculator")
         self.itemData = itemDataFrame.ItemDataFrame(self)
         self.tabs.add(self.itemData, text="Item Data")
 

@@ -151,7 +151,12 @@ class Planner(tk.Frame):
                 for i in items.items():
                     count = results.get(i[0], 0)
                     results[i[0]] = count + i[1]
-        self.master.calculator.create_path(results)
+        for item in results:
+            results2 = results.copy()
+            item_data = ADP.Inventory().inventory[item]
+            results[item] = {"itemId": item, "need": int(results2.get(item)),
+                             "have": int(iFrame.InventoryFrame.frames[item].itemHave.get()),
+                             "formulas": {}}
         return results
 
     # noinspection PyUnusedLocal
@@ -171,7 +176,7 @@ class Planner(tk.Frame):
             icon.thumbnail((20, 20), Image.ANTIALIAS)
             icon = ImageTk.PhotoImage(icon)
             self.list[data]["icon"] = icon
-            self.list[data]["need"] = results.get(data)
+            self.list[data]["need"] = results[data]["need"]
             self.list[data]["have"] = iFrame.InventoryFrame.frames[data].itemHave.get()
         for i in self.results.get_children():
             self.results.delete(i)
@@ -179,6 +184,7 @@ class Planner(tk.Frame):
             for i in results:
                 self.results.insert("", tk.END, image=self.list[i]["icon"],
                                     values=(self.list[i]["name"], self.list[i]["need"], self.list[i]["have"]))
+        self.master.calculator.create_visible_tree(results)
 
     def add_ear_to_list(self):
         """

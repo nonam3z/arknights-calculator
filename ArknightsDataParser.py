@@ -165,6 +165,7 @@ class Inventory(metaclass=Singleton):
 
     @staticmethod
     def calc_flags(inv):
+        dualchips_id = ["3213", "3223", "3233", "3243", "3253", "3263", "3273", "3283", "32001"]
         for item in inv.values():
             if len(item.formula) > 0:
                 for i in item.formula["costs"]:
@@ -173,6 +174,8 @@ class Inventory(metaclass=Singleton):
                 item.flags = "Crafting"
             else:
                 item.flags = "Farming"
+            if item.itemId in dualchips_id:
+                item.flags = "Crafting"
         return inv
 
     @staticmethod
@@ -204,6 +207,7 @@ class Inventory(metaclass=Singleton):
             else:
                 name = self.inventory[itemid].name
         return name
+
 
 def return_list_of_ears():
     """
@@ -309,17 +313,19 @@ class Item:
 
     def calc_cost(self):
         for stage in self.stages.values():
+            if stage.get("stageId") in Database().stages:
+                stage.setdefault("name", self.data.stages[stage["stageId"]]["code"])
             if self.data.stages.get(stage["stageId"]):
-                ap_cost = self.data.stages[stage["stageId"]]["apCost"]
+                stage.setdefault("stagecost", self.data.stages[stage["stageId"]]["apCost"])
             else:
-                ap_cost = math.inf
-            percentage = stage["quantity"] / stage["times"]
-            if percentage > 0:
-                best_ap = ap_cost / percentage
+                stage.setdefault("stagecost", math.inf)
+            stage.setdefault("percentage", (stage["quantity"] / stage["times"]))
+            if stage.get("percentage") > 0:
+                stage.setdefault("costperitem", (stage.get("stagecost") / stage.get("percentage")))
             else:
-                best_ap = math.inf
-            if best_ap < self.bestAp:
-                self.bestAp = best_ap
+                stage.setdefault("costperitem", math.inf)
+            if stage.get("costperitem") < self.bestAp:
+                self.bestAp = stage.get("costperitem")
                 self.bestStage = self.data.stages[stage["stageId"]]["code"]
                 self.bestStageId = stage["stageId"]
         return None
@@ -351,8 +357,7 @@ class OperatorState:
                 self.calc_needs(0, self.desired.level - 1, elite)
         for elite in range(self.current.elite, self.desired.elite):
             self.cost["4001"] = self.cost.get("4001", 0) + \
-                                self.data.gameconst["evolveGoldCost"][self.operator.ear["rarity"]][
-                                    elite]
+                                self.data.gameconst["evolveGoldCost"][self.operator.ear["rarity"]][elite]
             for i in self.return_results(elite + 1).items():
                 count = self.cost.get(i[0], 0)
                 self.cost[i[0]] = count + i[1]

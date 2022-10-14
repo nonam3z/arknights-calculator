@@ -82,5 +82,5 @@ class InventoryFrame(tk.Frame):
     def create_item_list():
         data = {}
         for i in InventoryFrame.frames.values():
-            data.setdefault(i.itemId, i.itemHave.get())
+            data.setdefault(i.itemId, int(i.itemHave.get()))
         return data

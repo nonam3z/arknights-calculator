@@ -76,3 +76,6 @@ class CraftingFrame(tk.Frame):
     def on_visibility(self, event):
         self.master.planner.calculate()
         self.update()
+
+    def clear_all(self):
+        self.craftingFrame.delete(*self.craftingFrame.get_children())

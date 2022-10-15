@@ -170,3 +170,6 @@ class CalculateFrame(tk.Frame):
     def on_visibility(self, event):
         self.master.planner.calculate()
         self.update()
+
+    def clear_all(self):
+        self.calculateFrame.delete(*self.calculateFrame.get_children())

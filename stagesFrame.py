@@ -40,6 +40,7 @@ class StagesFrame(tk.Frame):
                 self.stagesFrame.change_state(child_iid, "checked")
 
     def create_visible_tree(self):
+        self.stagesFrame.delete(*self.stagesFrame.get_children())
         zones = {}
         for stage in self.stages.values():
             if not zones.get(stage["zoneId"]):
@@ -67,3 +68,6 @@ class StagesFrame(tk.Frame):
         for stage_iid in allowed_stages_iid:
             allowed_stages.append(self.stagesFrame.item(stage_iid)["values"][1])
         return allowed_stages
+
+    def clear_all(self):
+        self.stagesFrame.delete(*self.stagesFrame.get_children())

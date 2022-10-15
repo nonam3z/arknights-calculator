@@ -113,6 +113,11 @@ class Application(tk.Frame):
     def change_repository(self):
         self.save_data()
         self.update_data()
+        self.calculator.clear_all()
+        self.farming.clear_all()
+        self.crafting.clear_all()
+        self.stages.clear_all()
+        self.stages.create_visible_tree()
         self.load_data()
 
     def update_data(self):

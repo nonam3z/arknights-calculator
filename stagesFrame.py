@@ -1,5 +1,6 @@
 import re
 import tkinter as tk
+from tkinter import ttk
 
 import ttkwidgets as ttkw
 
@@ -12,13 +13,17 @@ class StagesFrame(tk.Frame):
 
         self.grid(padx=5, pady=5, sticky="nsew")
         self.columnconfigure(0, weight=1)
-        self.rowconfigure(0, weight=1)
+        self.rowconfigure(0, weight=0)
+        self.rowconfigure(1, weight=1)
 
         self.master = master
         self.stages = ADP.Database().stages
 
+        self.selectAll = ttk.Button(self, text="Select All", command=lambda: self.select_all())
+        self.selectAll.grid(column=0, row=0)
+
         self.stagesFrame = ttkw.CheckboxTreeview(self, columns=["name", "stageId"])
-        self.stagesFrame.grid(column=0, row=0, sticky="nsew")
+        self.stagesFrame.grid(column=0, row=1, sticky="nsew")
         self.stagesFrame.column("#0", stretch=False, width=150)
         self.stagesFrame.heading("#0", text="Icon", anchor="center")
         self.stagesFrame.column("name", stretch=True, width=150)
@@ -27,6 +32,12 @@ class StagesFrame(tk.Frame):
         self.stagesFrame.heading("stageId", text="Stage Id", anchor="center")
 
         self.create_visible_tree()
+
+    def select_all(self):
+        for iid in self.stagesFrame.get_children():
+            self.stagesFrame.change_state(iid, "checked")
+            for child_iid in self.stagesFrame.get_children(iid):
+                self.stagesFrame.change_state(child_iid, "checked")
 
     def create_visible_tree(self):
         zones = {}
@@ -49,3 +60,10 @@ class StagesFrame(tk.Frame):
             for stage in zones[zone]:
                 self.stagesFrame.insert(lastIid, tk.END, values=(zones[zone][stage]["code"], stage))
         pass
+
+    def create_checked_list(self):
+        allowed_stages_iid = self.stagesFrame.get_checked()
+        allowed_stages = []
+        for stage_iid in allowed_stages_iid:
+            allowed_stages.append(self.stagesFrame.item(stage_iid)["values"][1])
+        return allowed_stages

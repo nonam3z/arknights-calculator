@@ -69,11 +69,11 @@ class CalculateFrame(tk.Frame):
     def create_results_dict(self, results):
         inventory = iFrame.InventoryFrame.create_item_list()
         results2 = results.copy()
-        for item in results:
-            if results[item]["need"] <= inventory[item] > 0:
-                results2.pop(item)
-            elif results[item]["need"] > inventory[item]:
-                results2[item]["need"] = results2[item]["need"] - inventory[item]
+        for item in results.values():
+            if item["need"] <= inventory[item["itemId"]] > 0:
+                results2.pop(item["itemId"])
+            elif item["need"] > inventory[item["itemId"]]:
+                results2[item["itemId"]]["need"] = item["need"] - inventory[item["itemId"]]
         results = results2
         for item in results:
             results[item]["formulas"] = self.create_materials_tree(item, results[item]["need"])
@@ -102,13 +102,24 @@ class CalculateFrame(tk.Frame):
         self.crafting_data = {}
         results = self.create_results_dict(results)
         total_cost = 0
-        for item in results:
-            self.create_branch(results[item], "")
+        for item in results.values():
+            self.create_branch(item, "")
+            if self.inventory[item["itemId"]].flags == "Farming":
+                if self.farming_data.get(item["itemId"]):
+                    self.farming_data[item["itemId"]]["need"] = self.farming_data[item["itemId"]] + item["need"]
+                else:
+                    self.farming_data.setdefault(item["itemId"], item)
         for item in self.calculateFrame.get_children():
             if self.calculateFrame.item(item)["values"][2]:
                 total_cost += int(self.calculateFrame.item(item)["values"][2])
-        self.master.farming.create_visible_tree(self.farming_data)
         self.master.crafting.create_visible_tree(self.crafting_data)
+        crafting_data_copy = self.crafting_data.copy()
+        self.crafting_data = {}
+        for item in crafting_data_copy:
+            self.crafting_data.setdefault(item, {"itemId": item, "need": int(crafting_data_copy.get(item)),
+                                                 "formulas": {}})
+        self.create_add_farming(self.create_results_dict(self.crafting_data))
+        self.master.farming.create_visible_tree(self.farming_data)
         self.text.set("Total item sanity cost: " + str(total_cost))
 
     def create_branch(self, item, iid):
@@ -125,11 +136,6 @@ class CalculateFrame(tk.Frame):
                                                  self.inventory[item["itemId"]].name, item["need"],
                                                  cost, runs, self.inventory[item["itemId"]].bestStage
                                              ))
-        if self.inventory[item["itemId"]].flags == "Farming":
-            if self.farming_data.get(item["itemId"]):
-                self.farming_data[item["itemId"]] = self.farming_data[item["itemId"]] + item["need"]
-            else:
-                self.farming_data.setdefault(item["itemId"], item["need"])
         if self.inventory[item["itemId"]].flags == "Crafting":
             if self.crafting_data.get(item["itemId"]):
                 self.crafting_data[item["itemId"]] = self.crafting_data[item["itemId"]] + item["need"]
@@ -138,6 +144,28 @@ class CalculateFrame(tk.Frame):
             if item["formulas"]:
                 for mat in item["formulas"]:
                     self.create_branch(item["formulas"][mat], lastIid)
+
+    def create_add_farming(self, results):
+        for item in results:
+            if results[item]["formulas"]:
+                for mat in results[item]["formulas"].values():
+                    self.create_branch_add_farming(mat)
+        return results
+
+    def create_branch_add_farming(self, item):
+        if self.inventory[item["itemId"]].flags == "Farming":
+            if self.farming_data.get(item["itemId"]):
+                self.farming_data[item["itemId"]]["need"] = self.farming_data[item["itemId"]]["need"] + item["need"]
+            else:
+                self.farming_data.setdefault(item["itemId"], item)
+        if self.inventory[item["itemId"]].flags == "Crafting":
+            if self.crafting_data.get(item["itemId"]):
+                self.crafting_data[item["itemId"]]["need"]  = self.crafting_data[item["itemId"]]["need"] + item["need"]
+            else:
+                self.crafting_data.setdefault(item["itemId"], item)
+                if item["formulas"]:
+                    for mat in item["formulas"]:
+                        self.create_branch_add_farming(item)
 
     def on_visibility(self, event):
         self.master.planner.calculate()

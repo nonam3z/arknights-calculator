@@ -68,27 +68,40 @@ class FarmingFrame(tk.Frame):
     def create_visible_tree(self, results):
         self.farmingFrame.delete(*self.farmingFrame.get_children())
         total_cost = 0
-        results2 = results.copy()
         inventory = iFrame.InventoryFrame.create_item_list()
+        results_copy = results.copy()
+        results_copy2 = {}
         for item in results:
-            if results[item] <= inventory[item]:
-                results2.pop(item)
-            elif results[item] > inventory[item]:
-                results2[item] = results2[item] - inventory[item]
-        results = results2
+            if results[item]["need"] <= inventory[item]:
+                results_copy.pop(item)
+            elif results[item]["need"] > inventory[item]:
+                results_copy[item]["need"] = results_copy[item]["need"] - inventory[item]
+        results = results_copy
+        for item in results:
+            allowed_stages = self.master.stages.create_checked_list()
+            item_stages = self.inventory[item].stages.copy()
+            results_copy2.setdefault(item, {"itemId": item, "need": results[item]["need"], "stages": item_stages})
+            item_stages2 = results_copy2[item]["stages"].copy()
+            for stage in item_stages2:
+                if stage not in allowed_stages:
+                    results_copy2[item]["stages"].pop(stage)
+        results = results_copy2
         for item in results:
             stages = ADP.Database().stages
-            stage = self.inventory[item].bestStageId
-            if stage:
-                runs = math.ceil((self.inventory[item].bestAp * results[item]) / stages[stage]["apCost"])
-                cost = runs * stages[stage]["apCost"]
+            runs = ""
+            cost = ""
+            if results[item]["stages"]:
+                stage = results[item]["stages"].get(next(iter(results[item]["stages"])))
+                stage_name = stage["name"]
+                if stage:
+                    runs = math.ceil((stage["costperitem"] * results[item]["need"]) / stage["stagecost"])
+                    cost = runs * stage["stagecost"]
             else:
-                runs = ""
-                cost = ""
+                stage_name = "No avaliable stages found"
             lastIid = self.farmingFrame.insert("", tk.END, image=self.inventory[item].icon,
                                                values=(
-                                                   self.inventory[item].name, results[item],
-                                                   cost, runs, self.inventory[item].bestStage
+                                                   self.inventory[item].name, results[item]["need"],
+                                                   cost, runs, stage_name
                                                ))
         for item in self.farmingFrame.get_children():
             if self.farmingFrame.item(item)["values"][2]:

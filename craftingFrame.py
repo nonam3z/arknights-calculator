@@ -61,11 +61,11 @@ class CraftingFrame(tk.Frame):
         total_cost = 0
         results2 = results.copy()
         inventory = iFrame.InventoryFrame.create_item_list()
-        for item in results:
-            if results[item] <= inventory[item] > 0:
-                results2.pop(item)
-            elif results[item] > inventory[item]:
-                results2[item] = results2[item] - inventory[item]
+        # for item in results:
+        #     if results[item] <= inventory[item] > 0:
+        #         results2.pop(item)
+        #     elif results[item] > inventory[item]:
+        #         results2[item] = results2[item] - inventory[item]
         results = results2
         for item in results:
             lastIid = self.craftingFrame.insert("", tk.END, image=self.inventory[item].icon,

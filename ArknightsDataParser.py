@@ -1,3 +1,4 @@
+import collections
 import datetime
 import json
 import math
@@ -151,8 +152,8 @@ class Database(metaclass=Singleton):
 class Inventory(metaclass=Singleton):
     def __init__(self):
         self.inventory = {}
-        data = Database()
-        for item in data.items["items"].values():
+        self.data = Database()
+        for item in self.data.items["items"].values():
             if item["itemId"] in ["4001", "5001", "32001", "4006"]:
                 self.inventory[item["itemId"]] = Item(item["itemId"])
             if item["classifyType"] == "MATERIAL" and item["itemType"] == "MATERIAL" and not item["obtainApproach"]:
@@ -178,13 +179,13 @@ class Inventory(metaclass=Singleton):
                 item.flags = "Crafting"
         return inv
 
-    @staticmethod
-    def add_some_shitty_formulas(inv):
+    def add_some_shitty_formulas(self, inv):
         for item in inv.values():
             if item.itemId == "4001":
                 item.bestAp = 0.004
                 item.bestStage = "CE-5"
                 item.bestStageId = "wk_melee_5"
+                item.stages = self.data.stages.setdefault(item.bestStageId, self.data.stages[item.bestStageId])
             elif item.itemId == "5001":
                 pass
             elif item.itemId == "32001":
@@ -195,6 +196,7 @@ class Inventory(metaclass=Singleton):
                 item.bestAp = 1.5
                 item.bestStage = "AP-5"
                 item.bestStageId = "wk_toxic_5"
+                item.stages = self.data.stages.setdefault(item.bestStageId, self.data.stages[item.bestStageId])
         return inv
 
     def corr_names(self, itemid):
@@ -305,29 +307,35 @@ class Item:
 
     def get_stages(self):
         results = {}
+        results_sorted = collections.OrderedDict()
         for i in range(self.data.materials.__len__()):
-            stage = self.data.materials[i]
+            stage = self.data.materials[i].copy()
             if stage["itemId"] == self.itemId:
                 results[stage["stageId"]] = stage
-        return results
+                if stage.get("stageId") in Database().stages:
+                    results[stage["stageId"]].setdefault("name", self.data.stages[stage["stageId"]]["code"])
+                if self.data.stages.get(stage["stageId"]):
+                    results[stage["stageId"]].setdefault("stagecost", self.data.stages[stage["stageId"]]["apCost"])
+                else:
+                    results[stage["stageId"]].setdefault("stagecost", math.inf)
+                results[stage["stageId"]].setdefault("percentage", (stage["quantity"] / stage["times"]))
+                if stage.get("percentage") > 0:
+                    results[stage["stageId"]].setdefault("costperitem", (stage.get("stagecost") / stage.get("percentage")))
+                else:
+                    results[stage["stageId"]].setdefault("costperitem", math.inf)
+        for k, v in sorted(results.items(), key=lambda x: x[1]["costperitem"]):
+            results_sorted.setdefault(k, v)
+        for stage in results_sorted:
+            results_sorted[stage] = results[stage]
+        return results_sorted
 
     def calc_cost(self):
-        for stage in self.stages.values():
-            if stage.get("stageId") in Database().stages:
-                stage.setdefault("name", self.data.stages[stage["stageId"]]["code"])
-            if self.data.stages.get(stage["stageId"]):
-                stage.setdefault("stagecost", self.data.stages[stage["stageId"]]["apCost"])
-            else:
-                stage.setdefault("stagecost", math.inf)
-            stage.setdefault("percentage", (stage["quantity"] / stage["times"]))
-            if stage.get("percentage") > 0:
-                stage.setdefault("costperitem", (stage.get("stagecost") / stage.get("percentage")))
-            else:
-                stage.setdefault("costperitem", math.inf)
-            if stage.get("costperitem") < self.bestAp:
-                self.bestAp = stage.get("costperitem")
-                self.bestStage = self.data.stages[stage["stageId"]]["code"]
-                self.bestStageId = stage["stageId"]
+        test = self.stages
+        if self.stages:
+            stage = self.stages.get(next(iter(self.stages)))
+            self.bestAp = stage.get("costperitem")
+            self.bestStage = self.data.stages[stage["stageId"]]["code"]
+            self.bestStageId = stage["stageId"]
         return None
 
 

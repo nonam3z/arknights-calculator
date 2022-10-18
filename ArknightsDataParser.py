@@ -24,6 +24,20 @@ def get_file_from_github(filename, rep):
     open(file, 'w+').write(json.dumps(data))
 
 
+def get_images_from_github(filename):
+    repository = "https://raw.githubusercontent.com/Aceship/Arknight-Images/main/items/"
+    url = (repository + filename + ".png")
+    os.makedirs("items/", exist_ok=True)
+    file = ("items/" + filename + ".png")
+    if os.path.exists(file):
+        if os.path.getsize(file) == 0:
+            os.remove(file)
+    if not os.path.exists(file):
+        data = requests.get(url=url).content
+        if data.__len__() > 20:
+            open(file, 'wb+').write(data)
+
+
 def get_penguin_data(rep):
     """
     Метод для получения матрицы стоимости и частоты выпадения материалов с Penguin Statistics.
@@ -56,7 +70,7 @@ def update_script(rep, force):
     print(str(date_github) + " // git -- file // " + str(date_file) + " // rep: " + rep)
     bool_check = date_github > date_file
     print("Check git > file: " + str(bool_check))
-    if (date_github > date_file) or (force == True):
+    if (date_github > date_file) or (force is True):
         os.makedirs("jsons", exist_ok=True)
         print("Getting characters data...")
         get_file_from_github("character_table", rep)
@@ -66,6 +80,10 @@ def update_script(rep, force):
         get_file_from_github("building_data", rep)
         print("Getting game constants...")
         get_file_from_github("gamedata_const", rep)
+        print("Getting module data...")
+        get_file_from_github("uniequip_table", rep)
+        print("Getting zones data...")
+        get_file_from_github("zone_table", rep)
         print("Getting stages data...")
         get_file_from_github("stage_table", rep)
     print("Getting matrix data...")
@@ -104,6 +122,8 @@ class FileRepository:
         self.gameconst = {}
         self.materials = {}
         self.stages = {}
+        self.zones = {}
+        self.modules = {}
         try:
             self.load_files(rep)
         except json.JSONDecodeError as error:
@@ -124,7 +144,8 @@ class FileRepository:
         self.gameconst = json.load(open("jsons/" + rep + "/gamedata_const.json", encoding='utf-8'))
         self.materials = json.load(open("jsons/" + rep + "/materials.json", encoding='utf-8'))["matrix"]
         self.stages = json.load(open("jsons/" + rep + "/stage_table.json", encoding='utf-8'))["stages"]
-        pass
+        self.zones = json.load(open("jsons/" + rep + "/zone_table.json", encoding='utf-8'))["zones"]
+        self.modules = json.load(open("jsons/" + rep + "/uniequip_table.json", encoding='utf-8'))
 
 
 class Savedata:
@@ -147,6 +168,8 @@ class Database(metaclass=Singleton):
         self.gameconst = self.data.gameconst
         self.materials = self.data.materials
         self.stages = self.data.stages
+        self.zones = self.data.zones
+        self.modules = self.data.modules
 
 
 class Inventory(metaclass=Singleton):
@@ -154,7 +177,7 @@ class Inventory(metaclass=Singleton):
         self.inventory = {}
         self.data = Database()
         for item in self.data.items["items"].values():
-            if item["itemId"] in ["4001", "5001", "32001", "4006"]:
+            if item["itemId"] in ["4001", "5001", "32001", "4006", "mod_unlock_token"]:
                 self.inventory[item["itemId"]] = Item(item["itemId"])
             if item["classifyType"] == "MATERIAL" and item["itemType"] == "MATERIAL" and not item["obtainApproach"]:
                 self.inventory[item["itemId"]] = Item(item["itemId"])
@@ -163,6 +186,10 @@ class Inventory(metaclass=Singleton):
         if os.path.exists("jsons/en_US/item_table.json"):
             for item in self.inventory.values():
                 self.inventory[item.itemId].name = self.corr_names(item.itemId)
+        for item in self.inventory.values():
+            if not os.path.exists(("items/" + item.iconId + ".png")):
+                print("Getting image " + item.name + " from github...")
+                get_images_from_github(item.iconId)
 
     @staticmethod
     def calc_flags(inv):

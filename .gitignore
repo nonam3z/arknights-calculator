@@ -6,3 +6,13 @@
 /jsons/*.json
 /savedata.json
 /settings.json
+/items/*
+/items/
+/dist/
+/build/
+/dist.zip
+/items.zip
+/main.spec
+/main.spec.bak
+/settings.json.bak
+/.gitignore

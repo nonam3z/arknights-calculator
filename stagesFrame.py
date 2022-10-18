@@ -18,6 +18,7 @@ class StagesFrame(tk.Frame):
 
         self.master = master
         self.stages = ADP.Database().stages
+        self.zones = ADP.Database().zones
 
         self.selectAll = ttk.Button(self, text="Select All", command=lambda: self.select_all())
         self.selectAll.grid(column=0, row=0)
@@ -41,27 +42,31 @@ class StagesFrame(tk.Frame):
 
     def create_visible_tree(self, checked_list):
         self.stagesFrame.delete(*self.stagesFrame.get_children())
-        zones = {}
+        _zones = {}
         for stage in self.stages.values():
-            if not zones.get(stage["zoneId"]):
-                zones.setdefault(stage["zoneId"], {})
+            if not _zones.get(stage["zoneId"]):
+                _zones.setdefault(stage["zoneId"], {})
         pattern = r"(main).*|(weekly).*"
-        zones2 = zones.copy()
+        zones2 = _zones.copy()
         for zone in zones2:
             if not re.fullmatch(pattern, zone):
-                zones.pop(zone)
+                _zones.pop(zone)
         for stage in self.stages.values():
-            if stage["zoneId"] in zones:
-                if not zones[stage["zoneId"]].get(stage["stageId"]):
+            if stage["zoneId"] in _zones:
+                if not _zones[stage["zoneId"]].get(stage["stageId"]):
                     stagespattern = r".*(#f#)|(tr).*"
                     if not re.fullmatch(stagespattern, stage["stageId"]):
-                        zones[stage["zoneId"]].setdefault(stage["stageId"], stage)
-        for zone in zones:
-            zone_iid = self.stagesFrame.insert("", tk.END, values=(zone, zone))
+                        _zones[stage["zoneId"]].setdefault(stage["stageId"], stage)
+        for zone in _zones:
+            if self.zones[zone].get("zoneNameFirst"):
+                zone_name = self.zones[zone].get("zoneNameFirst")
+            else:
+                zone_name = self.zones[zone].get("zoneNameSecond")
+            zone_iid = self.stagesFrame.insert("", tk.END, values=(zone_name, zone))
             if zone in checked_list:
                 self.stagesFrame.change_state(zone_iid, checked_list[zone])
-            for stage in zones[zone]:
-                stage_iid = self.stagesFrame.insert(zone_iid, tk.END, values=(zones[zone][stage]["code"], stage))
+            for stage in _zones[zone]:
+                stage_iid = self.stagesFrame.insert(zone_iid, tk.END, values=(_zones[zone][stage]["code"], stage))
                 if stage in checked_list:
                     self.stagesFrame.change_state(stage_iid, checked_list[stage])
         pass

@@ -118,7 +118,9 @@ class Application(tk.Frame):
             self.calculator.clear_all()
             self.farming.clear_all()
             self.crafting.clear_all()
+            self.itemData.clear_all()
             self.load_data()
+            self.itemData.create_info()
         else:
             self.rep_choose_var.set(self.settings.repository)
 

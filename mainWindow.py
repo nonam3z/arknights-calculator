@@ -54,6 +54,7 @@ class Application(tk.Frame):
         self.grid(padx=5, pady=5, sticky="nsew")
 
         self.tabs = ttk.Notebook(self)
+        self.tabs.bind("<<NotebookTabChanged>>", self.update_tabs_data)
         self.tabs.grid(row=0, column=0, sticky="nsew")
         self.planner = plannerFrame.Planner(self)
         self.tabs.add(self.planner, text="Planner")
@@ -111,14 +112,15 @@ class Application(tk.Frame):
         return None
 
     def change_repository(self):
-        self.save_data()
-        self.update_data()
-        self.calculator.clear_all()
-        self.farming.clear_all()
-        self.crafting.clear_all()
-        self.stages.clear_all()
-        self.stages.create_visible_tree()
-        self.load_data()
+        if self.rep_choose_var.get() in ["en_US", "zh_CN", "ja_JP", "ko_KR", "zh_TW"]:
+            self.save_data()
+            self.update_data()
+            self.calculator.clear_all()
+            self.farming.clear_all()
+            self.crafting.clear_all()
+            self.load_data()
+        else:
+            self.rep_choose_var.set(self.settings.repository)
 
     def update_data(self):
         self.inventory.clear_inventory()
@@ -131,10 +133,11 @@ class Application(tk.Frame):
         self.inventory.update_inventory()
         self.calculator.create_item_list()
         self.farming.create_item_list()
+        self.settings.repository = self.rep_choose_var.get()
 
     def save_data(self):
         earList = self.planner.allEarsList
-        data = {"earList": {}, "inventory": {}}
+        data = {"earList": {}, "inventory": {}, "stages": {}}
         for ears in earList.values():
             data["earList"][ears.name] = {}
             data["earList"][ears.name]["iid"] = ears.iid
@@ -146,6 +149,7 @@ class Application(tk.Frame):
             data["inventory"][items.itemId]["itemId"] = items.itemId
             if items.itemHave.get():
                 data["inventory"][items.itemId]["have"] = items.itemHave.get()
+        data["stages"].setdefault("checked_list", self.stages.create_checked_list())
         if os.path.exists("jsons/" + self.settings.repository + "/savedata.json"):
             os.remove("jsons/" + self.settings.repository + "/savedata.json")
         file = open("jsons/" + self.settings.repository + "/savedata.json", 'w+')
@@ -184,27 +188,37 @@ class Application(tk.Frame):
                 self.update_variables()
                 savedata = json.load(open("jsons/" + self.settings.repository + "/savedata.json", encoding='utf-8'))
                 self.planner.del_all_ears()
-                for ear in savedata["earList"].values():
-                    name = ear["name"]
-                    iid = ear["iid"]
-                    sc = ear["current"]
-                    sd = ear["desired"]
-                    current = ADP.Stats(sc["elite"], sc["level"], sc["skill1"], sc["skill2"],
-                                        sc["skill3"])
-                    desired = ADP.Stats(sd["elite"], sd["level"], sd["skill1"], sd["skill2"],
-                                        sd["skill3"])
-                    operator = ADP.OperatorState(iid, name, current, desired)
-                    self.planner.allEarsList.setdefault(operator.name)
-                    self.planner.allEarsList[operator.name] = operator
-                    self.planner.earsList.insert("", tk.END,
-                                                 values=(
-                                                     name, self.planner.create_upgrade_string(current, desired)),
-                                                 iid=iid)
-                for item in savedata["inventory"].values():
-                    try:
+                try:
+                    for ear in savedata["earList"].values():
+                        name = ear["name"]
+                        iid = ear["iid"]
+                        sc = ear["current"]
+                        sd = ear["desired"]
+                        current = ADP.Stats(sc["elite"], sc["level"], sc["skill1"], sc["skill2"],
+                                            sc["skill3"])
+                        desired = ADP.Stats(sd["elite"], sd["level"], sd["skill1"], sd["skill2"],
+                                            sd["skill3"])
+                        operator = ADP.OperatorState(iid, name, current, desired)
+                        self.planner.allEarsList.setdefault(operator.name)
+                        self.planner.allEarsList[operator.name] = operator
+                        self.planner.earsList.insert("", tk.END,
+                                                     values=(
+                                                         name, self.planner.create_upgrade_string(current, desired)),
+                                                     iid=iid)
+                except KeyError:
+                    print("KeyError in savedata.json --> earList.")
+                try:
+                    for item in savedata["inventory"].values():
                         iFrame.InventoryFrame.frames[item["itemId"]].itemHave.set(int(item["have"]))
-                    except KeyError:
-                        pass
+                except KeyError:
+                    print("KeyError in savedata.json --> inventory.")
+                try:
+                    self.stages.clear_all()
+                    self.stages.create_visible_tree(savedata["stages"]["checked_list"])
+                except KeyError:
+                    self.stages.clear_all()
+                    self.stages.create_visible_tree({})
+                    print("KeyError in savedata.json --> stages.")
         else:
             return None
 
@@ -216,3 +230,7 @@ class Application(tk.Frame):
         ADP.Database()
         ADP.Inventory.clear()
         ADP.Inventory()
+
+    def update_tabs_data(self, event):
+        self.planner.create_results_list("")
+        self.update()

@@ -31,7 +31,7 @@ class StagesFrame(tk.Frame):
         self.stagesFrame.column("stageId", stretch=True, width=150)
         self.stagesFrame.heading("stageId", text="Stage Id", anchor="center")
 
-        self.create_visible_tree()
+        self.create_visible_tree({})
 
     def select_all(self):
         for iid in self.stagesFrame.get_children():
@@ -39,7 +39,7 @@ class StagesFrame(tk.Frame):
             for child_iid in self.stagesFrame.get_children(iid):
                 self.stagesFrame.change_state(child_iid, "checked")
 
-    def create_visible_tree(self):
+    def create_visible_tree(self, checked_list):
         self.stagesFrame.delete(*self.stagesFrame.get_children())
         zones = {}
         for stage in self.stages.values():
@@ -57,16 +57,22 @@ class StagesFrame(tk.Frame):
                     if not re.fullmatch(stagespattern, stage["stageId"]):
                         zones[stage["zoneId"]].setdefault(stage["stageId"], stage)
         for zone in zones:
-            lastIid = self.stagesFrame.insert("", tk.END, values=(zone, ""))
+            zone_iid = self.stagesFrame.insert("", tk.END, values=(zone, zone))
+            if zone in checked_list:
+                self.stagesFrame.change_state(zone_iid, checked_list[zone])
             for stage in zones[zone]:
-                self.stagesFrame.insert(lastIid, tk.END, values=(zones[zone][stage]["code"], stage))
+                stage_iid = self.stagesFrame.insert(zone_iid, tk.END, values=(zones[zone][stage]["code"], stage))
+                if stage in checked_list:
+                    self.stagesFrame.change_state(stage_iid, checked_list[stage])
         pass
 
     def create_checked_list(self):
-        allowed_stages_iid = self.stagesFrame.get_checked()
-        allowed_stages = []
+        allowed_stages_iid = list(self.stagesFrame.tag_has("checked"))
+        allowed_stages_iid.extend(list(self.stagesFrame.tag_has("tristate")))
+        allowed_stages = {}
         for stage_iid in allowed_stages_iid:
-            allowed_stages.append(self.stagesFrame.item(stage_iid)["values"][1])
+            stage_item = self.stagesFrame.item(stage_iid)
+            allowed_stages.setdefault(stage_item["values"][1], stage_item["tags"][0])
         return allowed_stages
 
     def clear_all(self):

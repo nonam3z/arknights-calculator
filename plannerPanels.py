@@ -196,5 +196,5 @@ class CalcPanel(tk.Frame):
         self.selectSkill3.insert(0, "1")
 
     def callback(self, event):
-        print("Callback triggered: " + str(event))
+        # print("Callback triggered: " + str(event))
         self.on_reset("")

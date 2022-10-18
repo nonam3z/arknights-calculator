@@ -27,8 +27,6 @@ class FarmingFrame(tk.Frame):
         self.label.grid(column=0, row=0, sticky="ew")
         self.text.set("Total sanity cost: 0")
 
-        self.bind("<FocusIn>", self.on_visibility)
-
         self.farmingFrame = ttk.Treeview(self, columns=["name", "need", "cost", "runs", "stage", "prob"])
         self.farmingFrame.grid(column=0, row=1, sticky="nsew")
         self.farmingFrame.column("#0", stretch=False, width=150)
@@ -107,10 +105,6 @@ class FarmingFrame(tk.Frame):
             if self.farmingFrame.item(item)["values"][2]:
                 total_cost += int(self.farmingFrame.item(item)["values"][2])
         self.text.set("Total sanity cost: " + str(total_cost))
-
-    def on_visibility(self, event):
-        self.master.planner.calculate()
-        self.update()
 
     def clear_all(self):
         self.farmingFrame.delete(*self.farmingFrame.get_children())

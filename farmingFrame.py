@@ -74,7 +74,7 @@ class FarmingFrame(tk.Frame):
                 results_copy.pop(item)
             elif results[item]["need"] > inventory[item]:
                 results_copy[item]["need"] = results_copy[item]["need"] - inventory[item]
-        results = results_copy
+        results = results_copy.copy()
         for item in results:
             allowed_stages = self.master.stages.create_checked_list()
             item_stages = self.inventory[item].stages.copy()
@@ -83,7 +83,7 @@ class FarmingFrame(tk.Frame):
             for stage in item_stages2:
                 if stage not in allowed_stages:
                     results_copy2[item]["stages"].pop(stage)
-        results = results_copy2
+        results = results_copy2.copy()
         for item in results:
             stages = ADP.Database().stages
             runs = ""

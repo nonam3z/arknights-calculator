@@ -6,7 +6,6 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 
 import ArknightsDataParser as ADP
-import inventoryFrame as iFrame
 
 
 class CalculateFrame(tk.Frame):
@@ -65,14 +64,8 @@ class CalculateFrame(tk.Frame):
                 item.icon = None
 
     def create_results_dict(self, results):
-        inventory = iFrame.InventoryFrame.create_item_list()
         results2 = results.copy()
-        for item in results.values():
-            if item["need"] <= inventory[item["itemId"]] > 0:
-                results2.pop(item["itemId"])
-            elif item["need"] > inventory[item["itemId"]]:
-                results2[item["itemId"]]["need"] = item["need"] - inventory[item["itemId"]]
-        results = results2
+        results = results2.copy()
         for item in results:
             results[item]["formulas"] = self.create_materials_tree(item, results[item]["need"])
         return results

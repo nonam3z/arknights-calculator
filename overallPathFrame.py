@@ -6,6 +6,7 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 
 import ArknightsDataParser as ADP
+import inventoryFrame as iFrame
 
 
 class CalculateFrame(tk.Frame):
@@ -91,6 +92,7 @@ class CalculateFrame(tk.Frame):
         self.calculateFrame.delete(*self.calculateFrame.get_children())
         self.farming_data = {}
         self.crafting_data = {}
+        inventory = iFrame.InventoryFrame.create_item_list()
         results = self.create_results_dict(results)
         total_cost = 0
         for item in results.values():
@@ -104,12 +106,19 @@ class CalculateFrame(tk.Frame):
             if self.calculateFrame.item(item)["values"][2]:
                 total_cost += int(self.calculateFrame.item(item)["values"][2])
         self.master.crafting.create_visible_tree(self.crafting_data)
-        crafting_data_copy = self.crafting_data.copy()
+        cdc = self.crafting_data.copy()
         self.crafting_data = {}
-        for item in crafting_data_copy:
-            self.crafting_data.setdefault(item, {"itemId": item, "need": int(crafting_data_copy.get(item)),
+        for item in cdc:
+            self.crafting_data.setdefault(item, {"itemId": item, "need": int(cdc.get(item)),
                                                  "formulas": {}})
-        self.create_add_farming(self.create_results_dict(self.crafting_data))
+        cdc2 = self.crafting_data.copy()
+        for item in cdc:
+            if cdc[item] <= inventory[item]:
+                cdc2.pop(item)
+            elif cdc[item] > inventory[item]:
+                cdc2[item]["need"] = cdc2[item]["need"] - inventory[item]
+        cdc = cdc2.copy()
+        self.create_add_farming(self.create_results_dict(cdc))
         self.master.farming.create_visible_tree(self.farming_data)
         self.text.set("Total item sanity cost: " + str(total_cost))
 
@@ -151,7 +160,7 @@ class CalculateFrame(tk.Frame):
                 self.farming_data.setdefault(item["itemId"], item)
         if self.inventory[item["itemId"]].flags == "Crafting":
             if self.crafting_data.get(item["itemId"]):
-                self.crafting_data[item["itemId"]]["need"]  = self.crafting_data[item["itemId"]]["need"] + item["need"]
+                self.crafting_data[item["itemId"]]["need"] = self.crafting_data[item["itemId"]]["need"] + item["need"]
             else:
                 self.crafting_data.setdefault(item["itemId"], item)
                 if item["formulas"]:

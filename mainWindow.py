@@ -38,12 +38,33 @@ class Application(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
 
+        self.master = master
+        self.grid(padx=5, pady=5, sticky="nsew")
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+
+        master.minsize(width=400, height=400)
+        master.maxsize(width=400, height=400)
+
+        # self.loading_frame = tk.Frame(self)
+        # self.winfo_toplevel().title("Initializing, please wait...")
+        self.text = tk.StringVar()
+        # self.text.set("Loading program...")
+        # self.label = tk.Label(self.loading_frame, textvariable=self.text)
+        # self.label.grid(column=0, row=0)
+        # self.pgbar = ttk.Progressbar(self.loading_frame, orient="horizontal", mode="indeterminate", length=300)
+        # self.pgbar.grid(column=0, row=1)
+
+        self.text.set("Loading settings...")
         self.settings = ADP.Settings()
         self.rep_choose_var = tk.StringVar()
         self.load_settings()
+        self.text.set("Loading variables and item data...")
         self.update_variables()
 
-        self.master = master
+        # self.label.destroy()
+        # self.pgbar.destroy()
+
         self.winfo_toplevel().title("Arknights Calculator")
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
@@ -51,7 +72,6 @@ class Application(tk.Frame):
         master.minsize(width=1300, height=850)
         master.maxsize(width=1300, height=850)
         master.resizable(width=True, height=True)
-        self.grid(padx=5, pady=5, sticky="nsew")
 
         self.tabs = ttk.Notebook(self)
         self.tabs.bind("<<NotebookTabChanged>>", self.update_tabs_data)
@@ -126,7 +146,7 @@ class Application(tk.Frame):
 
     def update_data(self):
         self.inventory.clear_inventory()
-        if os.path.exists("jsons/"+self.rep_choose_var.get()):
+        if os.path.exists("jsons/" + self.rep_choose_var.get()):
             ADP.update_script(self.rep_choose_var.get(), False)
         else:
             ADP.update_script(self.rep_choose_var.get(), True)

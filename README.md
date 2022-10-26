@@ -9,9 +9,9 @@ Work in progress.
 Current version can properly calculate elite\\skills promotions and counts for inventory changes.
 
 Needed libraries:
-  tkinter, ttk, ttkwidgets
-  PIL (for item icons)
-  github (checking for data updates)
-  requests
-  re (for validation purposes)
-  win32, os
+  tkinter, ttk, ttkwidgets,
+  PIL (for item icons),
+  github (checking for data updates),
+  requests,
+  re (for validation purposes),
+  win32, os.

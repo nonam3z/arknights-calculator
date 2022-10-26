@@ -1,3 +1,7 @@
+# Arknights Operators Promotion Calculator
+# Copyright (C) 2021 NoNaM3z
+# email: anton.gf.feo@gmail.com
+
 import tkinter as tk
 from tkinter import ttk
 

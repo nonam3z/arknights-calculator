@@ -1,6 +1,6 @@
 # Arknights Operators Promotion Calculator
-# Copyright (C) 2021 NoNaM3z
-# email: anton.gf.feo@gmail.com
+
+email: anton.gf.feo@gmail.com
 
 Arknights Operators Promotion Calculator based on Penguin Statistics (https://penguin-stats.io) database.
 Big thanks to Aceship and Kengxxiao for provided data files from the game.

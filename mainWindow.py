@@ -16,19 +16,8 @@ import stagesFrame
 
 class EarEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, ADP.OperatorState):
-            return obj.__dict__
-        if isinstance(obj, ADP.Stats):
-            return obj.__dict__
-        if isinstance(obj, ADP.Settings):
-            return obj.__dict__
-        if isinstance(obj, iFrame.InventoryFrame):
-            return obj.__dict__
-        if isinstance(obj, ADP.Operator):
-            return obj.__dict__
-        if isinstance(obj, ADP.Item):
-            return obj.__dict__
-        if isinstance(obj, ADP.Inventory):
+        instances = (ADP.OperatorState, ADP.Stats, ADP.Settings, iFrame.InventoryFrame, ADP.Operator, ADP.Item, ADP.Inventory)
+        if isinstance(obj, instances):
             return obj.__dict__
         return json.JSONEncoder.default(self, obj)
 
@@ -43,34 +32,16 @@ class Application(tk.Frame):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
 
-        master.minsize(width=400, height=400)
-        master.maxsize(width=400, height=400)
-
-        # self.loading_frame = tk.Frame(self)
-        # self.winfo_toplevel().title("Initializing, please wait...")
-        self.text = tk.StringVar()
-        # self.text.set("Loading program...")
-        # self.label = tk.Label(self.loading_frame, textvariable=self.text)
-        # self.label.grid(column=0, row=0)
-        # self.pgbar = ttk.Progressbar(self.loading_frame, orient="horizontal", mode="indeterminate", length=300)
-        # self.pgbar.grid(column=0, row=1)
-
-        self.text.set("Loading settings...")
         self.settings = ADP.Settings()
         self.rep_choose_var = tk.StringVar()
-        self.load_settings()
-        self.text.set("Loading variables and item data...")
-        self.update_variables()
 
-        # self.label.destroy()
-        # self.pgbar.destroy()
+        self.starting_sequence()
 
         self.winfo_toplevel().title("Arknights Calculator")
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(0, weight=1)
 
         master.minsize(width=1300, height=850)
-        master.maxsize(width=1300, height=850)
+        master.geometry("1300x850")
+        # master.maxsize(width=1300, height=850)
         master.resizable(width=True, height=True)
 
         self.tabs = ttk.Notebook(self)
@@ -97,7 +68,7 @@ class Application(tk.Frame):
         self.settings_menu = tk.Menu(self.menu, tearoff=False)
         self.settings_menu.add_command(label="Clear Inventory", command=self.check_error_typing)
         self.settings_menu.add_command(label="Update Arknights Data",
-                                       command=lambda: ADP.update_script(self.rep_choose_var.get(), True))
+                                       command=lambda: ADP.LoadFiles(self.rep_choose_var.get(), True).run())
 
         self.rep_choose = tk.Menu(self.menu, tearoff=False)
         self.rep_choose.add_checkbutton(label="en-US", onvalue="en_US", variable=self.rep_choose_var,
@@ -116,6 +87,10 @@ class Application(tk.Frame):
         self.menu.add_cascade(label="Repository", menu=self.rep_choose)
 
         self.load_data()
+
+    def starting_sequence(self):
+        self.load_settings()
+        self.update_variables()
 
     @staticmethod
     def about_message():
@@ -147,9 +122,9 @@ class Application(tk.Frame):
     def update_data(self):
         self.inventory.clear_inventory()
         if os.path.exists("jsons/" + self.rep_choose_var.get()):
-            ADP.update_script(self.rep_choose_var.get(), False)
+            ADP.LoadFiles(self.rep_choose_var.get(), False).run()
         else:
-            ADP.update_script(self.rep_choose_var.get(), True)
+            ADP.LoadFiles(self.rep_choose_var.get(), True).run()
         self.update_variables()
         self.planner.selectOperator["values"] = ADP.return_list_of_ears()
         self.inventory.update_inventory()

@@ -16,3 +16,5 @@
 /main.spec.bak
 /settings.json.bak
 /.gitignore
+/venv311/
+/items/

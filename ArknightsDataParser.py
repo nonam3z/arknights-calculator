@@ -3,25 +3,10 @@ import datetime
 import json
 import math
 import os
+import threading
 
 import github
 import requests
-
-
-def get_file_from_github(filename, rep):
-    """
-    Метод для получения файлов из репозитория github.
-    :param filename: Принимает на вход имя файла.
-    :param rep: Принимает на вход репозиторий.
-    """
-    repository = "https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/" + str(rep) + "/gamedata/excel/"
-    url = (repository + filename + ".json")
-    os.makedirs(("jsons/" + rep + "/"), exist_ok=True)
-    file = ("jsons/" + rep + "/" + filename + ".json")
-    if os.path.exists(file):
-        os.remove(file)
-    data = requests.get(url=url).json()
-    open(file, 'w+').write(json.dumps(data))
 
 
 def get_images_from_github(filename):
@@ -38,68 +23,87 @@ def get_images_from_github(filename):
             open(file, 'wb+').write(data)
 
 
-def get_penguin_data(rep):
-    """
-    Метод для получения матрицы стоимости и частоты выпадения материалов с Penguin Statistics.
-    """
-    repository = "https://penguin-stats.io/PenguinStats/api/v2/result/matrix"
-    file = "jsons/" + rep + "/materials.json"
-    reps = ["en_US", "zh_CN", "ja_JP", "ko_KR", "zh_TW"]
-    servers = ["US", "CN", "JP", "KR", "CN"]
-    if rep in reps:
-        server = servers[reps.index(rep)]
-    else:
-        server = "US"
-    if os.path.exists(file):
-        os.remove(file)
-    PARAMS = {"server": server, "show_closed_zones": False}
-    data = str(requests.get(url=repository, params=PARAMS).content)
-    data = data[2:-1:]
-    open(file, 'w+').write(data)
+class LoadFiles(threading.Thread):
+    def __init__(self, rep, force):
+        super().__init__()
 
+        self.rep, self.force = rep, force
 
-def update_script(rep, force):
-    """
-    Создание/обновление базы данных для работы программы.
-    """
-    date_github = check_github_last_update(rep)
-    if os.path.exists("jsons/" + rep):
-        date_file = datetime.datetime.fromtimestamp(os.path.getmtime(("jsons/" + rep)))
-    else:
-        date_file = datetime.datetime.now()
-    print(str(date_github) + " // git -- file // " + str(date_file) + " // rep: " + rep)
-    bool_check = date_github > date_file
-    print("Check git > file: " + str(bool_check))
-    if (date_github > date_file) or (force is True):
-        os.makedirs("jsons", exist_ok=True)
-        print("Getting characters data...")
-        get_file_from_github("character_table", rep)
-        print("Getting items data...")
-        get_file_from_github("item_table", rep)
-        print("Getting formulas data...")
-        get_file_from_github("building_data", rep)
-        print("Getting game constants...")
-        get_file_from_github("gamedata_const", rep)
-        print("Getting module data...")
-        get_file_from_github("uniequip_table", rep)
-        print("Getting zones data...")
-        get_file_from_github("zone_table", rep)
-        print("Getting stages data...")
-        get_file_from_github("stage_table", rep)
-    print("Getting matrix data...")
-    get_penguin_data(rep)
-    print("Update complete!")
+    def run(self):
+        """
+        Создание/обновление базы данных для работы программы.
+        """
+        date_github = self.check_github()
+        if os.path.exists("jsons/" + self.rep):
+            date_file = datetime.datetime.fromtimestamp(os.path.getmtime(("jsons/" + self.rep)))
+        else:
+            date_file = datetime.datetime.now()
+        print(str(date_github) + " // git -- file // " + str(date_file) + " // rep: " + self.rep)
+        bool_check = date_github > date_file
+        print("Check git > file: " + str(bool_check))
+        if (date_github > date_file) or (self.force is True):
+            os.makedirs("jsons", exist_ok=True)
+            print("Getting characters data...")
+            self.get_file("character_table")
+            print("Getting items data...")
+            self.get_file("item_table")
+            print("Getting formulas data...")
+            self.get_file("building_data")
+            print("Getting game constants...")
+            self.get_file("gamedata_const")
+            print("Getting module data...")
+            self.get_file("uniequip_table")
+            print("Getting zones data...")
+            self.get_file("zone_table")
+            print("Getting stages data...")
+            self.get_file("stage_table")
+        print("Getting matrix data...")
+        self.get_penguin_matrix()
+        print("Update complete!")
 
+    def check_github(self):
+        try:
+            g = github.Github()
+            repo = g.get_repo("Aceship/AN-EN-Tags")
+            commits = repo.get_commits(path=("json/gamedata/" + self.rep + "/gamedata"))
+            date = commits[0].commit.committer.date
+        except github.GithubException:
+            date = datetime.datetime.fromtimestamp(0)
+        return date
 
-def check_github_last_update(rep):
-    try:
-        g = github.Github()
-        repo = g.get_repo("Aceship/AN-EN-Tags")
-        commits = repo.get_commits(path=("json/gamedata/" + rep + "/gamedata"))
-        date = commits[0].commit.committer.date
-    except github.GithubException:
-        date = datetime.datetime.fromtimestamp(0)
-    return date
+    def get_file(self, filename):
+        """
+        Метод для получения файлов из репозитория github.
+        :param filename: Принимает на вход имя файла.
+        """
+        repository = "https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/" + str(
+            self.rep) + "/gamedata/excel/"
+        url = (repository + filename + ".json")
+        os.makedirs(("jsons/" + self.rep + "/"), exist_ok=True)
+        file = ("jsons/" + self.rep + "/" + filename + ".json")
+        if os.path.exists(file):
+            os.remove(file)
+        data = requests.get(url=url).json()
+        open(file, 'w+').write(json.dumps(data))
+
+    def get_penguin_matrix(self):
+        """
+        Метод для получения матрицы стоимости и частоты выпадения материалов с Penguin Statistics.
+        """
+        repository = "https://penguin-stats.io/PenguinStats/api/v2/result/matrix"
+        file = "jsons/" + self.rep + "/materials.json"
+        reps = ["en_US", "zh_CN", "ja_JP", "ko_KR", "zh_TW"]
+        servers = ["US", "CN", "JP", "KR", "CN"]
+        if self.rep in reps:
+            server = servers[reps.index(self.rep)]
+        else:
+            server = "US"
+        if os.path.exists(file):
+            os.remove(file)
+        PARAMS = {"server": server, "show_closed_zones": False}
+        data = str(requests.get(url=repository, params=PARAMS).content)
+        data = data[2:-1:]
+        open(file, 'w+').write(data)
 
 
 class Singleton(type):
@@ -130,11 +134,11 @@ class FileRepository:
             for file_name in os.listdir("jsons/" + rep):
                 if os.path.isfile("jsons/" + rep + "/" + file_name):
                     os.remove("jsons/" + rep + "/" + file_name)
-            update_script(rep, True)
+            LoadFiles(rep, True).run()
             self.load_files(rep)
         except FileNotFoundError as error:
             print("Database is corrupted or missing, redownloading...")
-            update_script(rep, True)
+            LoadFiles(rep, True).run()
             self.load_files(rep)
 
     def load_files(self, rep):
@@ -357,7 +361,6 @@ class Item:
         return results_sorted
 
     def calc_cost(self):
-        test = self.stages
         if self.stages:
             stage = self.stages.get(next(iter(self.stages)))
             self.bestAp = stage.get("costperitem")

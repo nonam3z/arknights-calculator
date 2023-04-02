@@ -8,7 +8,7 @@ from tkinter import ttk
 
 from PIL import Image, ImageTk
 
-import ArknightsDataParser as ADP
+from data_parser.inventory import Inventory
 
 
 class ItemDataFrame(tk.Frame):
@@ -51,7 +51,7 @@ class ItemDataFrame(tk.Frame):
         Создает список предметов с иконками для дальнейшей отрисовки таблицы.
         :return: Ничего не возвращает.
         """
-        self.item_list = ADP.Inventory().inventory
+        self.item_list = Inventory().inventory
         for item in self.item_list.values():
             try:
                 icon = Image.open("items/" + item.iconId + ".png")

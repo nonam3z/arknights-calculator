@@ -8,15 +8,8 @@ from tkinter import *
 
 from PIL import Image, ImageTk
 
-import ArknightsDataParser as ADP
-import inventoryPanels
-
-
-def parse_inventory():  # Парсим инвентарь, рассчитываем размеры для матрицы фреймов для отрисовки инвентаря.
-    inv = ADP.Inventory().inventory
-    i = int(inv.__len__())
-    j = math.ceil(i / 7)
-    return {'inv': inv, 'i': i, 'j': j}
+from data_parser.inventory import Inventory
+from . import inventory_panels
 
 
 class InventoryFrame(tk.Frame):
@@ -38,21 +31,35 @@ class InventoryFrame(tk.Frame):
         return None
 
     def update_inventory(self):
-
         InventoryFrame.frames = {}
+        self.inv = self.parse_inventory()
+        self.load_icons()
+        self.update_variables()
+        self.raise_frames()
 
-        for child in InventoryFrame.winfo_children(self):
-            child.destroy()
+    @staticmethod
+    def parse_inventory():  # Парсим инвентарь, рассчитываем размеры для матрицы фреймов для отрисовки инвентаря.
+        inv = Inventory().inventory
+        i = int(inv.__len__())
+        j = math.ceil(i / 7)
+        return {'inv': inv, 'i': i, 'j': j}
 
-        self.inv = parse_inventory()
-
+    def update_variables(self):
+        m, n = 0, 0
         for c in range(7):
             self.columnconfigure(c, weight=1)
             for r in range(self.inv['j']):
                 self.rowconfigure(r, weight=1)
+        for itemFrame in InventoryFrame.frames.values():
+            if itemFrame.itemId != "5001":
+                itemFrame.grid(row=n, column=m, sticky="nsew")
+                m = m + 1
+                if m >= 7:
+                    m, n = 0, (n + 1)
 
+    def load_icons(self):
         for k in self.inv['inv'].values():
-            item = inventoryPanels.InvPanel(self)
+            item = inventory_panels.InvPanel(self)
             item.itemId = k.itemId
             item.itemName.configure(text=k.name, justify="right", anchor="e")
             item.itemHave.insert(0, "0")
@@ -68,17 +75,7 @@ class InventoryFrame(tk.Frame):
                 print("File with id " + item.iconId + " not found, skipping...")
                 item.icon = None
 
-        n = 0
-        m = 0
-
-        for itemFrame in InventoryFrame.frames.values():
-            if itemFrame.itemId != "5001":
-                itemFrame.grid(row=n, column=m, sticky="nsew")
-                m = m + 1
-                if m >= 7:
-                    n = n + 1
-                    m = 0
-
+    def raise_frames(self):
         for frame in InventoryFrame.frames.values():
             frame.tkraise()
 

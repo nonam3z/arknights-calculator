@@ -8,7 +8,7 @@ from tkinter import ttk
 
 import ttkwidgets as ttkw
 
-import ArknightsDataParser as ADP
+from data_parser.database import Database
 
 
 class StagesFrame(tk.Frame):
@@ -21,8 +21,8 @@ class StagesFrame(tk.Frame):
         self.rowconfigure(1, weight=1)
 
         self.master = master
-        self.stages = ADP.Database().stages
-        self.zones = ADP.Database().zones
+        self.stages = Database().stages
+        self.zones = Database().zones
 
         self.selectAll = ttk.Button(self, text="Select All", command=lambda: self.select_all())
         self.selectAll.grid(column=0, row=0)

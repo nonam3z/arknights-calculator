@@ -107,11 +107,9 @@ class Model:
 
 
 class Controller:
-    def __init__(self, model, view, master):
+    def __init__(self, model, view):
         self.model = model
         self.view = view
-
-        self.master = master
 
     def set_binds(self):
         self.view.selectElite.bind("<Any-KeyRelease>", self.on_reset)
@@ -154,7 +152,7 @@ class Controller:
         """
         Обновляет фрейм, задавая ограничения полям для ввода на основе выбранной ушки.
         """
-        ear = self.model.get_ear(self.master.master.selectOperator.get())
+        ear = self.model.get_ear(self.view.master.master.selectOperator.get())
         self.view.selectElite["to"] = len(ear.ear["phases"]) - 1
         self.view.selectLvl["to"] = int(ear.phase(self.view.selectElite.get()))
         if self.view.selectLvl["to"] <= int(self.view.selectLvl.get()):
@@ -209,7 +207,7 @@ class StatsPanel:
         self.view = View(master=master)
         self.model = Model()
         self.validate = ValidateModel(self.view)
-        self.controller = Controller(self.model, self.view, self.master)
+        self.controller = Controller(self.model, self.view)
 
         self.view.set_controller(self.controller)
         self.validate.set_validate()

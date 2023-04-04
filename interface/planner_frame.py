@@ -5,7 +5,11 @@
 import tkinter as tk
 from tkinter import ttk
 
+from PIL import Image, ImageTk
+
+from data_parser import inventory
 from data_parser import operator
+from . import inventory_frame
 from . import planner_modules
 from . import planner_stats
 
@@ -101,14 +105,56 @@ class View(tk.Frame):
 
 class Model:
     def __init__(self):
-        self.ear = 0
-        self.allEarsList = {}
-        self.list = {}
-        self.path = {}
-        self.item_list = {}
+        self.ear, self.allEarsList = dict(), dict()
 
     def get_ears_list(self):
         return operator.return_list_of_ears()
+
+    def get_item_list(self):
+        return inventory.Inventory().inventory
+
+    def get_ear(self, name):
+        return operator.Operator(name)
+
+    def allEarsList_pop(self, name):
+        return self.allEarsList.pop(name)
+
+    def allEarsList_get(self, name):
+        return self.allEarsList.get(name)
+
+    def allEarsList_replace(self, iid, selectedOp, currStats, desStats):
+        op = operator.OperatorState(iid, selectedOp, currStats, desStats)
+        self.allEarsList.setdefault(op.name)
+        self.allEarsList[op.name] = op
+
+    def allEarsList_copy(self):
+        return self.allEarsList.copy()
+
+    def calculate(self, tpl, earsList):
+        """
+        Расчет стоимости апгрейда выделенных в списке ушек.
+        После расчетов отправляет результат в другие фреймы.
+        :return: Возвращает результаты расчетов в виде словарика из "id: count".
+        """
+        results = {}
+        for s in tpl:
+            selection = earsList.item(s)
+            values = selection.get('values')
+            name = values[0]
+            for ear in self.allEarsList.values():
+                if ear.name == name:
+                    self.ear = ear
+                    break
+            items = self.ear.cost
+            if items:
+                for i in items.items():
+                    count = results.get(i[0], 0)
+                    results[i[0]] = count + i[1]
+        for item in results:
+            results2 = results.copy()
+            results[item] = {"itemId": item, "need": int(results2.get(item)),
+                             "formulas": {}}
+        return results
 
 
 class Controller:
@@ -116,38 +162,76 @@ class Controller:
         self.model = model
         self.view = view
 
+        self.results_list = {}
+
     def set_binds(self):
-        # self.view.earsList.bind("<<TreeviewSelect>>", self.create_results_list)
-        # self.view.selectOperator.bind("<<ComboboxSelected>>", self.set_max_lvls)
-        self.view.buttonAdd.bind(self.add_ear_to_list)
+        self.view.earsList.bind("<<TreeviewSelect>>", self.create_results_list)
+        self.view.selectOperator.bind("<<ComboboxSelected>>", self.set_max_lvls)
+        self.view.buttonAdd.configure(command=self.earsList_add)
+        self.view.buttonDelete.configure(command=self.earsList_del)
 
     def load_data(self):
         self.view.selectOperator["values"] = self.model.get_ears_list()
 
-    def add_ear_to_list(self):
+    def earsList_add(self):
         """
         По нажатию кнопки Add Operator добавляет ушку в список на прокачку и в словарик объектов с ушками на прокачку.
         """
-        earlist = self.model.allEarsList.copy()
-        name = self.view.selectOperator.get()
-        currStats = self.view.currentStats.controller.construct_op()
-        desStats = self.view.desiredStats.construct_op()
-        results = self.create_upgrade_string(currStats, desStats)
+        allEarsListCopy = self.model.allEarsList_copy()
         selectedOp = self.view.selectOperator.get()
+        currStats = self.view.currentStats.controller.construct_op()
+        desStats = self.view.desiredStats.controller.construct_op()
+        results = self.create_upgrade_string(currStats, desStats)
         if results:
-            if earlist.get(name):
-                ear = self.model.allEarsList.get(name)
-                self.model.earsList.delete(ear.iid)
-                self.model.allEarsList.pop(name)
-                iid = self.model.earsList.insert("", tk.END, values=(selectedOp, results))
-                op = operator.OperatorState(iid, selectedOp, currStats, desStats)
-                self.model.allEarsList.setdefault(op.name)
-                self.model.allEarsList[op.name] = op
-            else:
-                iid = self.model.earsList.insert("", tk.END, values=(selectedOp, results))
-                op = operator.OperatorState(iid, selectedOp, currStats, desStats)
-                self.model.allEarsList.setdefault(op.name)
-                self.model.allEarsList[op.name] = op
+            if allEarsListCopy.get(selectedOp):
+                ear = self.model.allEarsList_get(selectedOp)
+                self.earsList_del_data(ear.iid, selectedOp)
+            iid = self.view.earsList.insert("", tk.END, values=(selectedOp, results))
+            self.model.allEarsList_replace(iid, selectedOp, currStats, desStats)
+
+    def earsList_del(self):
+        """
+        По нажатию кнопки Delete Operator удаляет ушку из таблички ушек и из словарика ушек.
+        """
+        for i in self.view.results.get_children():
+            self.view.results.delete(i)
+        for s in self.view.earsList.selection():
+            name = self.view.earsList.item(s)
+            values = name.get('values')
+            self.earsList_del_data(s, values[0])
+
+    def earsList_del_data(self, iid, selectedOp):
+        self.view.earsList.delete(iid)
+        self.model.allEarsList_pop(selectedOp)
+
+    def get_results(self):
+        return self.model.calculate(self.view.earsList.selection(), self.view.earsList)
+
+    def create_results_list(self, event):
+        """
+        Отображение результатов в фрейме results в виде списка.
+        :param event: Принимает на вход event.
+        """
+        results = self.get_results()
+        item_list = self.model.get_item_list()
+        for data in results:
+            self.results_list[data] = {}
+            self.results_list[data]["itemId"] = data
+            self.results_list[data]["name"] = item_list[data].name
+            self.results_list[data]["iconId"] = item_list[data].iconId
+            icon = Image.open("items/" + self.results_list[data]["iconId"] + ".png")
+            icon.thumbnail((20, 20), Image.ANTIALIAS)
+            icon = ImageTk.PhotoImage(icon)
+            self.results_list[data]["icon"] = icon
+            self.results_list[data]["need"] = results[data]["need"]
+            self.results_list[data]["have"] = inventory_frame.InventoryFrame.frames[data].itemHave.get()
+        for i in self.view.results.get_children():
+            self.view.results.delete(i)
+        if results:
+            for i in results:
+                self.view.results.insert("", tk.END, image=self.results_list[i]["icon"],
+                                         values=(self.results_list[i]["name"], self.results_list[i]["need"], self.results_list[i]["have"]))
+        # self.master.calculator.create_visible_tree(results)
 
     @staticmethod
     def create_upgrade_string(current, desired):
@@ -173,6 +257,37 @@ class Controller:
             results += ("S3(" + str(current.skill3) + " to " + str(desired.skill3) + "); ")
         return results
 
+    def set_max_lvls(self, event):
+        """
+        Выполняет установку ограничений для полей ввода параметров ушки.
+        :param event: Принимает на вход event.
+        """
+        ear = self.model.get_ear(self.view.selectOperator.get())
+        self.view.currentStats.controller.clear_spinboxes()
+        self.view.desiredStats.controller.clear_spinboxes()
+        self.skills_counter(ear.ear["skills"])
+
+    def skills_counter(self, skills):
+        """
+        Управляет работой полей ввода, отключая ненужные в зависимости от редкости ушки.
+        :param skills: Принимает на вход массив skills ушки, рассчитывая на его основе количество навыков ушки.
+        """
+        self.view.currentStats.selectSkill1.configure(state="DISABLED")
+        self.view.currentStats.selectSkill2.configure(state="DISABLED")
+        self.view.currentStats.selectSkill3.configure(state="DISABLED")
+        self.view.desiredStats.selectSkill1.configure(state="DISABLED")
+        self.view.desiredStats.selectSkill2.configure(state="DISABLED")
+        self.view.desiredStats.selectSkill3.configure(state="DISABLED")
+        if len(skills) >= 1:
+            self.view.currentStats.selectSkill1.configure(state="NORMAL")
+            self.view.desiredStats.selectSkill1.configure(state="NORMAL")
+        if len(skills) >= 2:
+            self.view.currentStats.selectSkill2.configure(state="NORMAL")
+            self.view.desiredStats.selectSkill2.configure(state="NORMAL")
+        if len(skills) == 3:
+            self.view.currentStats.selectSkill3.configure(state="NORMAL")
+            self.view.desiredStats.selectSkill3.configure(state="NORMAL")
+
 
 class PlannerFrame:
     def __init__(self, master):
@@ -186,137 +301,5 @@ class PlannerFrame:
 
         self.view.set_controller(self.controller)
 
-        self.controller.load_data()
         self.controller.set_binds()
-
-        # def calculate(self):
-        #     """
-        #     Расчет стоимости апгрейда выделенных в списке ушек.
-        #     После расчетов отправляет результат в другие фреймы.
-        #     :return: Возвращает результаты расчетов в виде словарика из "id: count".
-        #     """
-        #     results = {}
-        #     tpl = self.earsList.selection()
-        #     for s in tpl:
-        #         selection = self.earsList.item(s)
-        #         values = selection.get('values')
-        #         name = values[0]
-        #         for ear in self.allEarsList.values():
-        #             if ear.name == name:
-        #                 self.ear = ear
-        #                 break
-        #         items = self.ear.cost
-        #         if items:
-        #             for i in items.items():
-        #                 count = results.get(i[0], 0)
-        #                 results[i[0]] = count + i[1]
-        #     for item in results:
-        #         results2 = results.copy()
-        #         item_data = ADP.Inventory().inventory[item]
-        #         results[item] = {"itemId": item, "need": int(results2.get(item)),
-        #                          "formulas": {}}
-        #     return results
-        #
-        # # noinspection PyUnusedLocal
-        # def create_results_list(self, event):
-        #     """
-        #     Отображение результатов в фрейме results в виде списка.
-        #     :param event: Принимает на вход event.
-        #     """
-        #     results = self.calculate()
-        #     self.item_list = ADP.Inventory().inventory
-        #     for data in results:
-        #         self.list[data] = {}
-        #         self.list[data]["itemId"] = data
-        #         self.list[data]["name"] = self.item_list[data].name
-        #         self.list[data]["iconId"] = self.item_list[data].iconId
-        #         icon = Image.open("items/" + self.list[data]["iconId"] + ".png")
-        #         icon.thumbnail((20, 20), Image.ANTIALIAS)
-        #         icon = ImageTk.PhotoImage(icon)
-        #         self.list[data]["icon"] = icon
-        #         self.list[data]["need"] = results[data]["need"]
-        #         self.list[data]["have"] = iFrame.InventoryFrame.frames[data].itemHave.get()
-        #     for i in self.results.get_children():
-        #         self.results.delete(i)
-        #     if results:
-        #         for i in results:
-        #             self.results.insert("", tk.END, image=self.list[i]["icon"],
-        #                                 values=(self.list[i]["name"], self.list[i]["need"], self.list[i]["have"]))
-        #     self.master.calculator.create_visible_tree(results)
-        #
-        #
-        # @staticmethod
-        # def create_upgrade_string(current, desired):
-        #     """
-        #     Просто создает сокращенную строчку для вывода параметров прокачки в табличку с ушками.
-        #     :param current: Принимает объект с текущими статами ушки.
-        #     :param desired: Принимает объект с желаемыми статами ушки.
-        #     :return: Возвращает сокращенную строчку для вывода в табличку с ушками.
-        #     """
-        #     results = ""
-        #     if int(current.elite) < int(desired.elite):
-        #         results += (str(current.elite) + "e" + str(current.level) + " >>> "
-        #                     + str(desired.elite) + "e" + str(desired.level) + "; ")
-        #     if (int(current.elite) == int(desired.elite)) and (
-        #             int(current.level) < int(desired.level)):
-        #         results += (str(current.elite) + "e" + str(current.level) + " >>> "
-        #                     + str(desired.elite) + "e" + str(desired.level) + "; ")
-        #     if int(current.skill1) < int(desired.skill1):
-        #         results += ("S1(" + str(current.skill1) + " to " + str(desired.skill1) + "); ")
-        #     if int(current.skill2) < int(desired.skill2):
-        #         results += ("S2(" + str(current.skill2) + " to " + str(desired.skill2) + "); ")
-        #     if int(current.skill3) < int(desired.skill3):
-        #         results += ("S3(" + str(current.skill3) + " to " + str(desired.skill3) + "); ")
-        #     return results
-        #
-        # def del_ear_from_list(self):
-        #     """
-        #     По нажатию кнопки Delete Operator удаляет ушку из таблички ушек и из словарика ушек.
-        #     """
-        #     for i in self.results.get_children():
-        #         self.results.delete(i)
-        #     for s in self.earsList.selection():
-        #         name = self.earsList.item(s)
-        #         values = name.get('values')
-        #         self.earsList.delete(s)
-        #         self.allEarsList.pop(values[0])
-        #     # self.create_path_list()
-        #
-        # def del_all_ears(self):
-        #     for ear in self.earsList.get_children():
-        #         self.earsList.delete(ear)
-        #     self.allEarsList = {}
-        #
-        # # noinspection PyUnusedLocal
-        # def set_max_lvls(self, event):
-        #     """
-        #     Выполняет установку ограничений для полей ввода параметров ушки.
-        #     :param event: Принимает на вход event.
-        #     """
-        #     ear = ADP.Operator(self.selectOperator.get())
-        #     self.currentStats.clear_spinboxes()
-        #     self.desiredStats.clear_spinboxes()
-        #     self.currentStats.callback("<Current stats update.>")
-        #     self.desiredStats.callback("<Desired stats update.>")
-        #     self.skills_counter(ear.ear["skills"])
-        #
-        # def skills_counter(self, skills):
-        #     """
-        #     Управляет работой полей ввода, отключая ненужные в зависимости от редкости ушки.
-        #     :param skills: Принимает на вход массив skills ушки, рассчитывая на его основе количество навыков ушки.
-        #     """
-        #     self.currentStats.selectSkill1.configure(state=DISABLED)
-        #     self.currentStats.selectSkill2.configure(state=DISABLED)
-        #     self.currentStats.selectSkill3.configure(state=DISABLED)
-        #     self.desiredStats.selectSkill1.configure(state=DISABLED)
-        #     self.desiredStats.selectSkill2.configure(state=DISABLED)
-        #     self.desiredStats.selectSkill3.configure(state=DISABLED)
-        #     if len(skills) >= 1:
-        #         self.currentStats.selectSkill1.configure(state=NORMAL)
-        #         self.desiredStats.selectSkill1.configure(state=NORMAL)
-        #     if len(skills) >= 2:
-        #         self.currentStats.selectSkill2.configure(state=NORMAL)
-        #         self.desiredStats.selectSkill2.configure(state=NORMAL)
-        #     if len(skills) == 3:
-        #         self.currentStats.selectSkill3.configure(state=NORMAL)
-        #         self.desiredStats.selectSkill3.configure(state=NORMAL)
+        self.controller.load_data()

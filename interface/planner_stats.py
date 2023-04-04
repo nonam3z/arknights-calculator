@@ -57,11 +57,16 @@ class ValidateModel:
         self.ivcmd = (self.view.register(self.onInvalid))
 
     def set_validate(self):
-        self.view.selectElite.configure(validate="all", validatecommand=(self.vcmd, "%P", "%W", str(""r"\d")), invalidcommand=self.ivcmd)
-        self.view.selectLvl.configure(validate="all", validatecommand=(self.vcmd, "%P", "%W", str(""r"\d{1,2}")), invalidcommand=self.ivcmd)
-        self.view.selectSkill1.configure(validate="all", validatecommand=(self.vcmd, "%P", "%W", str(""r"10|\d")), invalidcommand=self.ivcmd)
-        self.view.selectSkill2.configure(validate="all", validatecommand=(self.vcmd, "%P", "%W", str(""r"10|\d")), invalidcommand=self.ivcmd)
-        self.view.selectSkill3.configure(validate="all", validatecommand=(self.vcmd, "%P", "%W", str(""r"10|\d")), invalidcommand=self.ivcmd)
+        self.view.selectElite.configure(validate="all", validatecommand=(self.vcmd, "%P", "%W", str(""r"\d")),
+                                        invalidcommand=(self.ivcmd, "%P", "%W"))
+        self.view.selectLvl.configure(validate="all", validatecommand=(self.vcmd, "%P", "%W", str(""r"\d{1,2}")),
+                                      invalidcommand=(self.ivcmd, "%P", "%W"))
+        self.view.selectSkill1.configure(validate="all", validatecommand=(self.vcmd, "%P", "%W", str(""r"10|\d")),
+                                         invalidcommand=(self.ivcmd, "%P", "%W"))
+        self.view.selectSkill2.configure(validate="all", validatecommand=(self.vcmd, "%P", "%W", str(""r"10|\d")),
+                                         invalidcommand=(self.ivcmd, "%P", "%W"))
+        self.view.selectSkill3.configure(validate="all", validatecommand=(self.vcmd, "%P", "%W", str(""r"10|\d")),
+                                         invalidcommand=(self.ivcmd, "%P", "%W"))
 
     def validate(self, P, W, pattern):
         widget = self.view.nametowidget(W)
@@ -97,11 +102,26 @@ class Model:
     def __init__(self):
         pass
 
+    def get_ear(self, name):
+        return operator.Operator(name)
+
 
 class Controller:
-    def __init__(self, model, view):
+    def __init__(self, model, view, master):
         self.model = model
         self.view = view
+
+        self.master = master
+
+    def set_binds(self):
+        self.view.selectElite.bind("<Any-KeyRelease>", self.on_reset)
+        self.view.selectSkill1.bind("<Any-KeyRelease>", self.sync_spinbox)
+        self.view.selectSkill2.bind("<Any-KeyRelease>", self.sync_spinbox)
+        self.view.selectSkill3.bind("<Any-KeyRelease>", self.sync_spinbox)
+        self.view.selectSkill3.configure(command=lambda: self.sync_spinbox(self.view.selectSkill3.get()))
+        self.view.selectSkill2.configure(command=lambda: self.sync_spinbox(self.view.selectSkill2.get()))
+        self.view.selectSkill1.configure(command=lambda: self.sync_spinbox(self.view.selectSkill1.get()))
+        self.view.selectElite.configure(command=lambda: self.on_reset(""))
 
     def construct_op(self):
         """
@@ -115,6 +135,70 @@ class Controller:
         skill3 = self.view.selectSkill3.get()
         return operator.Stats(int(elite), int(level), int(skill1), int(skill2), int(skill3))
 
+    def clear_spinboxes(self):
+        """
+        Очищает все поля, сбрасывая их к изначальным значениям.
+        """
+        self.view.selectElite.delete(0, 9)
+        self.view.selectElite.insert(0, "0")
+        self.view.selectLvl.delete(0, 9)
+        self.view.selectLvl.insert(0, "1")
+        self.view.selectSkill1.delete(0, 9)
+        self.view.selectSkill2.delete(0, 9)
+        self.view.selectSkill3.delete(0, 9)
+        self.view.selectSkill1.insert(0, "1")
+        self.view.selectSkill2.insert(0, "1")
+        self.view.selectSkill3.insert(0, "1")
+
+    def on_update(self):
+        """
+        Обновляет фрейм, задавая ограничения полям для ввода на основе выбранной ушки.
+        """
+        ear = self.model.get_ear(self.master.master.selectOperator.get())
+        self.view.selectElite["to"] = len(ear.ear["phases"]) - 1
+        self.view.selectLvl["to"] = int(ear.phase(self.view.selectElite.get()))
+        if self.view.selectLvl["to"] <= int(self.view.selectLvl.get()):
+            self.view.selectLvl.delete(0, 9)
+            self.view.selectLvl.insert(0, self.view.selectLvl["to"])
+        self.view.selectSkill1["to"] = ear.skill_lvl(self.view.selectElite.get())
+        self.view.selectSkill2["to"] = ear.skill_lvl(self.view.selectElite.get())
+        self.view.selectSkill3["to"] = ear.skill_lvl(self.view.selectElite.get())
+
+    def sync_spinbox(self, event):
+        """
+        Синхронизирует ввод для полей, отвещающих за уровни навыков ушки.
+        :param event:
+        """
+        if type(event) == tk.Event:
+            sbvalue = event.widget.get()
+        else:
+            sbvalue = event
+        if int(sbvalue) <= 7:
+            self.view.selectSkill1.delete(0, 9)
+            self.view.selectSkill1.insert(0, sbvalue)
+            self.view.selectSkill2.delete(0, 9)
+            self.view.selectSkill2.insert(0, sbvalue)
+            self.view.selectSkill3.delete(0, 9)
+            self.view.selectSkill3.insert(0, sbvalue)
+
+    # noinspection PyUnusedLocal
+    def on_reset(self, event):
+        """
+        Сбрасывает поля ввода при изменении уровня элитки ушки.
+        :param event: Принимает на вход event.
+        """
+        self.on_update()
+        if int(self.view.selectLvl.get()) > self.view.selectLvl["to"]:
+            self.view.selectLvl.delete(0, 9)
+            self.view.selectLvl.insert(0, self.view.selectLvl["to"])
+        if int(self.view.selectSkill1.get()) > self.view.selectSkill1["to"]:
+            self.view.selectSkill1.delete(0, 9)
+            self.view.selectSkill2.delete(0, 9)
+            self.view.selectSkill3.delete(0, 9)
+            self.view.selectSkill1.insert(0, self.view.selectSkill1["to"])
+            self.view.selectSkill2.insert(0, self.view.selectSkill1["to"])
+            self.view.selectSkill3.insert(0, self.view.selectSkill1["to"])
+
 
 class StatsPanel:
     def __init__(self, master):
@@ -125,98 +209,9 @@ class StatsPanel:
         self.view = View(master=master)
         self.model = Model()
         self.validate = ValidateModel(self.view)
-        self.controller = Controller(self.model, self.view)
+        self.controller = Controller(self.model, self.view, self.master)
 
         self.view.set_controller(self.controller)
         self.validate.set_validate()
 
-
-        # self.selectElite.bind("<Any-KeyRelease>", self.callback)
-        # self.selectSkill1.bind("<Any-KeyRelease>", self.sync_spinbox)
-        # self.selectSkill2.bind("<Any-KeyRelease>", self.sync_spinbox)
-        # self.selectSkill3.bind("<Any-KeyRelease>", self.sync_spinbox)
-        # self.selectSkill3.configure(command=lambda: self.sync_spinbox(self.selectSkill3.get()))
-        # self.selectSkill2.configure(command=lambda: self.sync_spinbox(self.selectSkill2.get()))
-        # self.selectSkill1.configure(command=lambda: self.sync_spinbox(self.selectSkill1.get()))
-        # self.selectElite.configure(command=lambda: self.callback("<Command event.>"))
-
-        # def construct_op(self):
-        #     """
-        #     Создаем объект-ушку с заданными параметрами на прокачку.
-        #     :return: Возвращает ушку как объект с параметрами для прокачки.
-        #     """
-        #     elite = self.selectElite.get()
-        #     level = self.selectLvl.get()
-        #     skill1 = self.selectSkill1.get()
-        #     skill2 = self.selectSkill2.get()
-        #     skill3 = self.selectSkill3.get()
-        #     return files_loader.Stats(int(elite), int(level), int(skill1), int(skill2), int(skill3))
-        #
-        # def on_update(self):
-        #     """
-        #     Обновляет фрейм, задавая ограничения полям для ввода на основе выбранной ушки.
-        #     """
-        #     self.ear = files_loader.Operator(self.master.selectOperator.get())
-        #     self.selectElite["to"] = len(self.ear.ear["phases"]) - 1
-        #     self.selectLvl["to"] = int(self.ear.phase(self.selectElite.get()))
-        #     if self.selectLvl["to"] <= int(self.selectLvl.get()):
-        #         self.selectLvl.delete(0, 9)
-        #         self.selectLvl.insert(0, self.selectLvl["to"])
-        #     self.selectSkill1["to"] = self.ear.skill_lvl(self.selectElite.get())
-        #     self.selectSkill2["to"] = self.ear.skill_lvl(self.selectElite.get())
-        #     self.selectSkill3["to"] = self.ear.skill_lvl(self.selectElite.get())
-        #
-        # def sync_spinbox(self, event):
-        #     """
-        #     Синхронизирует ввод для полей, отвещающих за уровни навыков ушки.
-        #     :param event:
-        #     """
-        #     print("Sync spinbox triggered: " + str(event))
-        #     if type(event) == tkinter.Event:
-        #         sbvalue = event.widget.get()
-        #     else:
-        #         sbvalue = event
-        #     if int(sbvalue) <= 7:
-        #         self.selectSkill1.delete(0, 9)
-        #         self.selectSkill1.insert(0, sbvalue)
-        #         self.selectSkill2.delete(0, 9)
-        #         self.selectSkill2.insert(0, sbvalue)
-        #         self.selectSkill3.delete(0, 9)
-        #         self.selectSkill3.insert(0, sbvalue)
-        #
-        # # noinspection PyUnusedLocal
-        # def on_reset(self, event):
-        #     """
-        #     Сбрасывает поля ввода при изменении уровня элитки ушки.
-        #     :param event: Принимает на вход event.
-        #     """
-        #     self.on_update()
-        #     if int(self.selectLvl.get()) > self.selectLvl["to"]:
-        #         self.selectLvl.delete(0, 9)
-        #         self.selectLvl.insert(0, self.selectLvl["to"])
-        #     if int(self.selectSkill1.get()) > self.selectSkill1["to"]:
-        #         self.selectSkill1.delete(0, 9)
-        #         self.selectSkill2.delete(0, 9)
-        #         self.selectSkill3.delete(0, 9)
-        #         self.selectSkill1.insert(0, self.selectSkill1["to"])
-        #         self.selectSkill2.insert(0, self.selectSkill1["to"])
-        #         self.selectSkill3.insert(0, self.selectSkill1["to"])
-        #
-        # def clear_spinboxes(self):
-        #     """
-        #     Очищает все поля, сбрасывая их к изначальным значениям.
-        #     """
-        #     self.selectElite.delete(0, 9)
-        #     self.selectElite.insert(0, "0")
-        #     self.selectLvl.delete(0, 9)
-        #     self.selectLvl.insert(0, "1")
-        #     self.selectSkill1.delete(0, 9)
-        #     self.selectSkill2.delete(0, 9)
-        #     self.selectSkill3.delete(0, 9)
-        #     self.selectSkill1.insert(0, "1")
-        #     self.selectSkill2.insert(0, "1")
-        #     self.selectSkill3.insert(0, "1")
-        #
-        # def callback(self, event):
-        #     # print("Callback triggered: " + str(event))
-        #     self.on_reset("")
+        self.controller.set_binds()

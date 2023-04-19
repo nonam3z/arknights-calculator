@@ -263,30 +263,8 @@ class Controller:
         :param event: Принимает на вход event.
         """
         ear = self.model.get_ear(self.view.selectOperator.get())
-        self.view.currentStats.controller.clear_spinboxes()
-        self.view.desiredStats.controller.clear_spinboxes()
-        self.skills_counter(ear.ear["skills"])
-
-    def skills_counter(self, skills):
-        """
-        Управляет работой полей ввода, отключая ненужные в зависимости от редкости ушки.
-        :param skills: Принимает на вход массив skills ушки, рассчитывая на его основе количество навыков ушки.
-        """
-        self.view.currentStats.selectSkill1.configure(state="DISABLED")
-        self.view.currentStats.selectSkill2.configure(state="DISABLED")
-        self.view.currentStats.selectSkill3.configure(state="DISABLED")
-        self.view.desiredStats.selectSkill1.configure(state="DISABLED")
-        self.view.desiredStats.selectSkill2.configure(state="DISABLED")
-        self.view.desiredStats.selectSkill3.configure(state="DISABLED")
-        if len(skills) >= 1:
-            self.view.currentStats.selectSkill1.configure(state="NORMAL")
-            self.view.desiredStats.selectSkill1.configure(state="NORMAL")
-        if len(skills) >= 2:
-            self.view.currentStats.selectSkill2.configure(state="NORMAL")
-            self.view.desiredStats.selectSkill2.configure(state="NORMAL")
-        if len(skills) == 3:
-            self.view.currentStats.selectSkill3.configure(state="NORMAL")
-            self.view.desiredStats.selectSkill3.configure(state="NORMAL")
+        self.view.currentStats.controller.set_params(ear.ear["skills"])
+        self.view.desiredStats.controller.set_params(ear.ear["skills"])
 
 
 class PlannerFrame:
@@ -303,3 +281,4 @@ class PlannerFrame:
 
         self.controller.set_binds()
         self.controller.load_data()
+        self.controller.set_max_lvls("")

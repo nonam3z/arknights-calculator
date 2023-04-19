@@ -30,7 +30,7 @@ class ItemDataFrame(tk.Frame):
         self.label.grid(column=0, row=0, sticky="ew")
         self.text.set("Filler Label")
 
-        self.itemData = ttk.Treeview(self, columns=["name", "cost", "ccost", "flags"])
+        self.itemData = ttk.Treeview(self, columns=["name", "cost", "ccost", "stage", "flags"])
         self.itemData.grid(column=0, row=1, sticky="nsew")
         self.itemData.column("#0", stretch=False, width=150)
         self.itemData.heading("#0", text="Icon", anchor="center")
@@ -39,7 +39,9 @@ class ItemDataFrame(tk.Frame):
         self.itemData.column("cost", stretch=True, width=70)
         self.itemData.heading("cost", text="AP Cost", anchor="center")
         self.itemData.column("ccost", stretch=True, width=70)
-        self.itemData.heading("ccost", text="Craft Cost", anchor="center")
+        self.itemData.heading("ccost", text="Stage", anchor="center")
+        self.itemData.column("stage", stretch=True, width=70)
+        self.itemData.heading("stage", text="Stage", anchor="center")
         self.itemData.column("flags", stretch=True, width=70)
         self.itemData.heading("flags", text="Flags", anchor="center")
 
@@ -68,10 +70,10 @@ class ItemDataFrame(tk.Frame):
         for item in self.item_list.values():
             if item.name not in ignore:
                 self.itemData.insert("", tk.END, image=item.icon,
-                                     values=(item.name, item.bestAp, item.craftingAp, item.flags))
+                                     values=(item.name, item.bestAp, item.craftingAp, item.bestStage, item.flags))
             else:
                 self.itemData.insert("", tk.END,
-                                     values=(item.iconId, item.bestAp, item.craftingAp, item.flags))
+                                     values=(item.iconId, item.bestAp, item.craftingAp, item.bestStage, item.flags))
 
     def clear_all(self):
         self.itemData.delete(*self.itemData.get_children())

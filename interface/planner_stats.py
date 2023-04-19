@@ -17,8 +17,6 @@ class View(tk.Frame):
 
         self.controller = None
 
-        self.ear = ""
-
         tk.Label(self, justify="left", text="Elite", width=6).grid(column=0, row=0)
         tk.Label(self, justify="left", text="Level", width=6).grid(column=0, row=1)
         tk.Label(self, justify="left", text="Skill 1", width=6).grid(column=0, row=2)
@@ -179,7 +177,6 @@ class Controller:
             self.view.selectSkill3.delete(0, 9)
             self.view.selectSkill3.insert(0, sbvalue)
 
-    # noinspection PyUnusedLocal
     def on_reset(self, event):
         """
         Сбрасывает поля ввода при изменении уровня элитки ушки.
@@ -196,6 +193,25 @@ class Controller:
             self.view.selectSkill1.insert(0, self.view.selectSkill1["to"])
             self.view.selectSkill2.insert(0, self.view.selectSkill1["to"])
             self.view.selectSkill3.insert(0, self.view.selectSkill1["to"])
+
+    def skills_counter(self, skills):
+        """
+        Управляет работой полей ввода, отключая ненужные в зависимости от редкости ушки.
+        :param skills: Принимает на вход массив skills ушки, рассчитывая на его основе количество навыков ушки.
+        """
+        self.view.selectSkill1.configure(state="disabled")
+        self.view.selectSkill2.configure(state="disabled")
+        self.view.selectSkill3.configure(state="disabled")
+        if len(skills) >= 1:
+            self.view.selectSkill1.configure(state="normal")
+        if len(skills) >= 2:
+            self.view.selectSkill2.configure(state="normal")
+        if len(skills) == 3:
+            self.view.selectSkill3.configure(state="normal")
+
+    def set_params(self, skills):
+        self.clear_spinboxes()
+        self.skills_counter(skills)
 
 
 class StatsPanel:

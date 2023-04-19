@@ -16,9 +16,12 @@ class Operator:
                     break
 
     def phase(self, phase):
-        if len(self.ear["phases"]) > 0:
-            return self.ear["phases"][int(phase)]["maxLevel"]
-        else:
+        try:
+            if len(self.ear["phases"]) > 0:
+                return self.ear["phases"][int(phase)]["maxLevel"]
+            else:
+                return 0
+        except IndexError:
             return 0
 
     def skill_lvl(self, phase):

@@ -9,6 +9,7 @@ from tkinter import *
 from tkinter import messagebox
 from tkinter import ttk
 
+import data_parser as ADP
 from .crafting_frame import CraftingFrame
 from .farming_frame import FarmingFrame
 from .inventory_frame import InventoryFrame
@@ -80,15 +81,23 @@ class Model:
         pass
 
     class EarEncoder(json.JSONEncoder):
+        """
+        JSONEncoder for all classes in calc. \n
+        Allows save of data in readable json.dict.
+        """
         def default(self, obj):
+            """
+            Default method for JSONEncoder. \n
+            :param obj: class
+            :return: serializable json.dict
+            """
             instances = (
-                ADP.OperatorState,
-                ADP.Stats,
-                ADP.Settings,
-                iFrame.InventoryFrame,
-                ADP.Operator,
-                ADP.Item,
-                ADP.Inventory
+                ADP.operator.OperatorState,
+                ADP.operator.Stats,
+                ADP.operator.Operator,
+                ADP.settings.Settings,
+                ADP.inventory.Item,
+                ADP.inventory.Inventory
             )
             if isinstance(obj, instances):
                 return obj.__dict__
@@ -111,7 +120,7 @@ class Model:
         if os.path.exists("jsons/" + rep + "/savedata.json"):
             os.remove("jsons/" + rep + "/savedata.json")
         file = open("jsons/" + rep + "/savedata.json", 'w+')
-        json.dump(data, file, cls=EarEncoder, indent=4)
+        json.dump(data, file, cls=self.EarEncoder, indent=4)
         file.close()
     pass
 

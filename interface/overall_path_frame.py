@@ -46,7 +46,7 @@ class Controller:
         pass
 
         #     self.create_item_list()
-        #     self.inventory = ADP.Inventory().inventory
+        #     self.inventory = DataParser.Inventory().inventory
         #     self.farming_data = {}
         #     self.crafting_data = {}
         #     self.inventory_copy = {}
@@ -80,12 +80,12 @@ class Controller:
         #     results = {}
         #     if itemId not in chips_id:
         #         if itemId not in small_chips_id:
-        #             if ADP.Inventory().inventory[itemId].formula:
-        #                 materials = ADP.Inventory().inventory[itemId].formula["costs"]
+        #             if DataParser.Inventory().inventory[itemId].formula:
+        #                 materials = DataParser.Inventory().inventory[itemId].formula["costs"]
         #                 for m in materials:
         #                     results.setdefault(m["id"], ({"itemId": m["id"], "need": need * m["count"],
         #                                                   "formulas": {}}))
-        #                     if ADP.Inventory().inventory[m["id"]].formula:
+        #                     if DataParser.Inventory().inventory[m["id"]].formula:
         #                         results[m["id"]]["formulas"] = self.create_materials_tree(m["id"], results[m["id"]]["need"])
         #         return results
         #     else:
@@ -126,7 +126,7 @@ class Controller:
         #     self.text.set("Total item sanity cost: " + str(total_cost))
         #
         # def create_branch(self, item, iid):
-        #     stages = ADP.Database().stages
+        #     stages = DataParser.Database().stages
         #     stage = self.inventory[item["itemId"]].bestStageId
         #     if stage:
         #         runs = math.ceil((self.inventory[item["itemId"]].bestAp * item["need"]) / stages[stage]["apCost"])

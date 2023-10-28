@@ -22,16 +22,16 @@ class LoadFiles(threading.Thread):
         super().__init__()
 
         date_github = self.check_github(rep)
-        if os.path.exists("jsons/" + rep):
-            date_file = datetime.datetime.fromtimestamp(os.path.getmtime(("jsons/" + rep)))
+        if os.path.exists(f"jsons/{rep}"):
+            date_file = datetime.datetime.fromtimestamp(os.path.getmtime(f"jsons/{rep}"))
         else:
             date_file = datetime.datetime.now()
-        print(str(date_github) + " // git -- file // " + str(date_file) + " // rep: " + rep)
+        # print(f"{date_github} // git -- file // {date_file} // rep: {rep} // filename: {filename}")
         bool_check = date_github > date_file
-        print("Check git > file: " + str(bool_check))
+        # print(f"Check git > file: {bool_check}")
         if bool_check or (force is True):
             os.makedirs("../jsons", exist_ok=True)
-            if filename == "materials":
+            if filename == "materials.json":
                 self.get_penguin_matrix(rep)
             else:
                 self.get_file(filename, rep)
@@ -40,8 +40,8 @@ class LoadFiles(threading.Thread):
     def check_github(rep: str):
         try:
             g = github.Github()
-            repo = g.get_repo("Aceship/AN-EN-Tags")
-            commits = repo.get_commits(path=("json/gamedata/" + rep + "/gamedata"))
+            repo = g.get_repo("Kengxxiao/ArknightsGameData_YoStar")
+            commits = repo.get_commits(path=f"{rep}/gamedata")
             date = commits[0].commit.committer.date
         except github.GithubException:
             date = datetime.datetime.fromtimestamp(0)
@@ -54,11 +54,10 @@ class LoadFiles(threading.Thread):
         :param rep: Принимает на вход текущий выбранный репозиторий.
         :param filename: Принимает на вход имя файла.
         """
-        repository = "https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/" + str(rep)\
-                     + "/gamedata/excel/"
-        url = (repository + filename + ".json")
-        os.makedirs(("jsons/" + rep + "/"), exist_ok=True)
-        file = ("jsons/" + rep + "/" + filename + ".json")
+        repository = f"https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData_YoStar/master/{rep}/gamedata/excel/"
+        url = f"{repository}{filename}"
+        os.makedirs(f"jsons/{rep}/", exist_ok=True)
+        file = f"jsons/{rep}/{filename}"
         if os.path.exists(file):
             os.remove(file)
         data = requests.get(url=url).json()
@@ -71,7 +70,7 @@ class LoadFiles(threading.Thread):
         :param rep: Принимает на вход текущий выбранный репозиторий.
         """
         repository = "https://penguin-stats.io/PenguinStats/api/v2/result/matrix"
-        file = "jsons/" + rep + "/materials.json"
+        file = f"jsons/{rep}/materials.json"
         reps = ["en_US", "zh_CN", "ja_JP", "ko_KR", "zh_TW"]
         servers = ["US", "CN", "JP", "KR", "CN"]
         if rep in reps:
@@ -91,9 +90,9 @@ class LoadImages(threading.Thread):
         super().__init__()
 
         repository = "https://raw.githubusercontent.com/Aceship/Arknight-Images/main/items/"
-        url = (repository + filename + ".png")
+        url = f"{repository}{filename}.png"
         os.makedirs("../items/", exist_ok=True)
-        file = ("items/" + filename + ".png")
+        file = f"items/{filename}.png"
         if os.path.exists(file):
             if os.path.getsize(file) == 0:
                 os.remove(file)
@@ -104,38 +103,35 @@ class LoadImages(threading.Thread):
 
 
 class FileRepository:
-    def __init__(self, rep: str):
+    def __init__(self, rep: str, force: bool):
+
+        params = { "ears": "character_table.json",
+                   "items": "item_table.json",
+                   "formulas": "building_data.json",
+                   "gameconst": "gamedata_const.json",
+                   "materials": "materials.json",
+                   "stages": "stage_table.json",
+                   "zones": "zone_table.json",
+                   "modules": "uniequip_table.json" }
+
+        def load_files():
+            for key, filename in params.items():
+                setattr(self, key, json.load(open(f"jsons/{rep}/{filename}", encoding='utf-8')))
+
         try:
-            self.ears = json.load(open("jsons/" + rep + "/character_table.json", encoding='utf-8'))
-            self.items = json.load(open("jsons/" + rep + "/item_table.json", encoding='utf-8'))
-            self.formulas = json.load(open("jsons/" + rep + "/building_data.json", encoding='utf-8'))
-            self.gameconst = json.load(open("jsons/" + rep + "/gamedata_const.json", encoding='utf-8'))
-            self.materials = json.load(open("jsons/" + rep + "/materials.json", encoding='utf-8'))["matrix"]
-            self.stages = json.load(open("jsons/" + rep + "/stage_table.json", encoding='utf-8'))["stages"]
-            self.zones = json.load(open("jsons/" + rep + "/zone_table.json", encoding='utf-8'))["zones"]
-            self.modules = json.load(open("jsons/" + rep + "/uniequip_table.json", encoding='utf-8'))
+            if not force:
+                load_files()
+            if force:
+                for file in params.values():
+                    LoadFiles(file, rep, True)
+                load_files()
         except json.JSONDecodeError as error:
             print(error.doc)
-            for file_name in os.listdir("jsons/" + rep):
-                if os.path.isfile("jsons/" + rep + "/" + file_name):
-                    os.remove("jsons/" + rep + "/" + file_name)
+            for file_name in os.listdir(f"jsons/{rep}"):
+                if os.path.isfile(f"jsons/{rep}/{file_name}"):
+                    os.remove(f"jsons/{rep}/{file_name}")
             LoadFiles(error.doc, rep, True)
         except FileNotFoundError as error:
             print(error.filename)
             print("Database is corrupted or missing, redownloading...")
             LoadFiles(error.filename, rep, True)
-
-# print("Getting characters data...")
-# self.get_file("character_table", rep)
-# print("Getting items data...")
-# self.get_file("item_table", rep)
-# print("Getting formulas data...")
-# self.get_file("building_data", rep)
-# print("Getting game constants...")
-# self.get_file("gamedata_const", rep)
-# print("Getting module data...")
-# self.get_file("uniequip_table", rep)
-# print("Getting zones data...")
-# self.get_file("zone_table", rep)
-# print("Getting stages data...")
-# self.get_file("stage_table", rep)

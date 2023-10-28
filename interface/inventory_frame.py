@@ -35,7 +35,7 @@ class InventoryFrame(tk.Frame):
         self.inv = self.parse_inventory()
         self.load_icons()
         self.update_variables()
-        self.raise_frames()
+        # self.raise_frames()
 
     @staticmethod
     def parse_inventory():  # Парсим инвентарь, рассчитываем размеры для матрицы фреймов для отрисовки инвентаря.
@@ -75,9 +75,9 @@ class InventoryFrame(tk.Frame):
                 print("File with id " + item.iconId + " not found, skipping...")
                 item.icon = None
 
-    def raise_frames(self):
-        for frame in InventoryFrame.frames.values():
-            frame.tkraise()
+    # def raise_frames(self):
+    #     for frame in InventoryFrame.frames.values():
+    #         frame.tkraise()
 
     @staticmethod
     def create_item_list():

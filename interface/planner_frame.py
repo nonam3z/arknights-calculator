@@ -8,7 +8,7 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 
 from data_parser import inventory
-from data_parser import operator
+from data_parser import operator as ADP
 from . import inventory_frame
 from . import planner_modules
 from . import planner_stats
@@ -108,13 +108,13 @@ class Model:
         self.ear, self.allEarsList = dict(), dict()
 
     def get_ears_list(self):
-        return operator.return_list_of_ears()
+        return ADP.return_list_of_ears()
 
     def get_item_list(self):
         return inventory.Inventory().inventory
 
     def get_ear(self, name):
-        return operator.Operator(name)
+        return ADP.Operator(name)
 
     def allEarsList_pop(self, name):
         return self.allEarsList.pop(name)
@@ -123,12 +123,15 @@ class Model:
         return self.allEarsList.get(name)
 
     def allEarsList_replace(self, iid, selectedOp, currStats, desStats):
-        op = operator.OperatorState(iid, selectedOp, currStats, desStats)
+        op = ADP.OperatorState(iid, selectedOp, currStats, desStats)
         self.allEarsList.setdefault(op.name)
         self.allEarsList[op.name] = op
 
     def allEarsList_copy(self):
         return self.allEarsList.copy()
+
+    def allEarsList_clear(self):
+        self.allEarsList = dict()
 
     def calculate(self, tpl, earsList):
         """
@@ -170,8 +173,21 @@ class Controller:
         self.view.buttonAdd.configure(command=self.earsList_add)
         self.view.buttonDelete.configure(command=self.earsList_del)
 
-    def load_data(self):
+    def load_data(self, earList):
         self.view.selectOperator["values"] = self.model.get_ears_list()
+        for ear in earList:
+            name = ear["name"]
+            iid = ear["iid"]
+            sc = ear["current"]
+            sd = ear["desired"]
+            current = ADP.Stats(sc["elite"], sc["level"], sc["skill1"], sc["skill2"],
+                                         sc["skill3"])
+            desired = ADP.Stats(sd["elite"], sd["level"], sd["skill1"], sd["skill2"],
+                                         sd["skill3"])
+            operator = ADP.OperatorState(iid, name, current, desired)
+            self.model.allEarsList.setdefault(operator.name)
+            self.model.allEarsList[operator.name] = operator
+            self.view.earsList.insert("", tk.END, values=(name, self.create_upgrade_string(current, desired)), iid=iid)
 
     def earsList_add(self):
         """
@@ -266,6 +282,10 @@ class Controller:
         self.view.currentStats.controller.set_params(ear.ear["skills"])
         self.view.desiredStats.controller.set_params(ear.ear["skills"])
 
+    def del_all_ears(self):
+        self.model.allEarsList_clear()
+        self.view.earsList.delete(*self.view.earsList.get_children())
+
 
 class PlannerFrame:
     def __init__(self, master):
@@ -280,5 +300,4 @@ class PlannerFrame:
         self.view.set_controller(self.controller)
 
         self.controller.set_binds()
-        self.controller.load_data()
         self.controller.set_max_lvls("")

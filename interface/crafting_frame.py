@@ -6,18 +6,21 @@ import tkinter as tk
 from tkinter import *
 from tkinter import ttk
 
+from PIL import Image, ImageTk
 
-class CraftingFrame(tk.Frame):
+from data_parser.inventory import *
+
+
+class View(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
+
+        self.controller = None
 
         self.grid(padx=5, pady=5, sticky="nsew")
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=0)
         self.rowconfigure(1, weight=1)
-
-        self.master = master
-        self.item_list = {}
 
         self.text = StringVar()
         self.label = tk.Label(self, justify="left", textvariable=self.text)
@@ -33,30 +36,56 @@ class CraftingFrame(tk.Frame):
         self.craftingFrame.column("need", stretch=True, width=50)
         self.craftingFrame.heading("need", text="Need to Craft", anchor="center")
 
+    def set_controller(self, controller):
+        self.controller = controller
+
+
+class Model:
+    def __init__(self):
+
+        self.item_list = {}
+        self.inventory = Inventory().inventory
+
+    def create_item_list(self):
+        """
+        Создает список предметов с иконками для дальнейшей отрисовки таблицы.
+        :return: Ничего не возвращает.
+        """
+        self.item_list = Inventory().inventory
+        for item in self.item_list.values():
+            try:
+                icon = Image.open("items/" + item.iconId + ".png")
+                icon.thumbnail((20, 20), Image.ANTIALIAS)
+                icon = ImageTk.PhotoImage(icon)
+                item.icon = icon
+            except FileNotFoundError:
+                print("File with id " + item.iconId + " not found, skipping...")
+                item.icon = None
+        return None
+
 
 class Controller:
-    def __init__(self):
-        pass
+    def __init__(self, model, view):
+        self.model = model
+        self.view = view
 
-        # self.inventory = ADP.Inventory().inventory
-        # self.create_item_list()
-        #
-        # def create_item_list(self):
-        #     """
-        #     Создает список предметов с иконками для дальнейшей отрисовки таблицы.
-        #     :return: Ничего не возвращает.
-        #     """
-        #     self.item_list = ADP.Inventory().inventory
-        #     for item in self.item_list.values():
-        #         try:
-        #             icon = Image.open("items/" + item.iconId + ".png")
-        #             icon.thumbnail((20, 20), Image.ANTIALIAS)
-        #             icon = ImageTk.PhotoImage(icon)
-        #             item.icon = icon
-        #         except FileNotFoundError:
-        #             print("File with id " + item.iconId + " not found, skipping...")
-        #             item.icon = None
-        #     return None
+    def clear_all(self):
+        self.view.craftingFrame.delete(*self.view.craftingFrame.get_children())
+
+
+class CraftingFrame:
+    def __init__(self, master):
+        super().__init__()
+
+        self.master = master
+
+        self.view = View(master=master)
+        self.model = Model()
+        self.controller = Controller(self.model, self.view)
+
+        self.view.set_controller(self.controller)
+        self.model.create_item_list()
+
         #
         # def create_visible_tree(self, results):
         #     self.craftingFrame.delete(*self.craftingFrame.get_children())
@@ -74,10 +103,3 @@ class Controller:
         #                                             values=(
         #                                                 self.inventory[item].name, results[item]))
         #     self.text.set("Total sanity cost: " + str(total_cost))
-        #
-        # def on_visibility(self, event):
-        #     self.master.planner.calculate()
-        #     self.update()
-        #
-        # def clear_all(self):
-        #     self.craftingFrame.delete(*self.craftingFrame.get_children())

@@ -6,10 +6,16 @@ import tkinter as tk
 from tkinter import *
 from tkinter import ttk
 
+from PIL import Image, ImageTk
 
-class FarmingFrame(tk.Frame):
+from data_parser.inventory import *
+
+
+class View(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
+
+        self.controller = None
 
         self.grid(padx=5, pady=5, sticky="nsew")
         self.columnconfigure(0, weight=1)
@@ -41,30 +47,55 @@ class FarmingFrame(tk.Frame):
         self.farmingFrame.column("prob", stretch=True, width=150)
         self.farmingFrame.heading("prob", text="Drop Chance", anchor="center")
 
+    def set_controller(self, controller):
+        self.controller = controller
+
+
+class Model:
+    def __init__(self):
+        self.item_list = {}
+        self.inventory = Inventory().inventory
+
+    def create_item_list(self):
+        """
+        Создает список предметов с иконками для дальнейшей отрисовки таблицы.
+        :return: Ничего не возвращает.
+        """
+        self.item_list = Inventory().inventory
+        for item in self.item_list.values():
+            try:
+                icon = Image.open("items/" + item.iconId + ".png")
+                icon.thumbnail((20, 20), Image.ANTIALIAS)
+                icon = ImageTk.PhotoImage(icon)
+                item.icon = icon
+            except FileNotFoundError:
+                print("File with id " + item.iconId + " not found, skipping...")
+                item.icon = None
+        return None
+
 
 class Controller:
-    def __init__(self):
-        pass
+    def __init__(self, model, view):
+        self.model = model
+        self.view = view
 
-        # self.inventory = ADP.Inventory().inventory
-        # self.create_item_list()
-        #
-        # def create_item_list(self):
-        #     """
-        #     Создает список предметов с иконками для дальнейшей отрисовки таблицы.
-        #     :return: Ничего не возвращает.
-        #     """
-        #     self.item_list = ADP.Inventory().inventory
-        #     for item in self.item_list.values():
-        #         try:
-        #             icon = Image.open("items/" + item.iconId + ".png")
-        #             icon.thumbnail((20, 20), Image.ANTIALIAS)
-        #             icon = ImageTk.PhotoImage(icon)
-        #             item.icon = icon
-        #         except FileNotFoundError:
-        #             print("File with id " + item.iconId + " not found, skipping...")
-        #             item.icon = None
-        #     return None
+    def clear_all(self):
+        self.view.farmingFrame.delete(*self.view.farmingFrame.get_children())
+
+
+class FarmingFrame:
+    def __init__(self, master):
+        super().__init__()
+
+        self.master = master
+
+        self.view = View(master=master)
+        self.model = Model()
+        self.controller = Controller(self.model, self.view)
+
+        self.view.set_controller(self.controller)
+        self.model.create_item_list()
+
         #
         # def create_visible_tree(self, results):
         #     self.farmingFrame.delete(*self.farmingFrame.get_children())
@@ -88,7 +119,7 @@ class Controller:
         #                 results_copy2[item]["stages"].pop(stage)
         #     results = results_copy2.copy()
         #     for item in results:
-        #         stages = ADP.Database().stages
+        #         stages = DataParser.Database().stages
         #         runs = ""
         #         cost = ""
         #         if results[item]["stages"]:
@@ -109,5 +140,3 @@ class Controller:
         #             total_cost += int(self.farmingFrame.item(item)["values"][2])
         #     self.text.set("Total sanity cost: " + str(total_cost))
         #
-        # def clear_all(self):
-        #     self.farmingFrame.delete(*self.farmingFrame.get_children())

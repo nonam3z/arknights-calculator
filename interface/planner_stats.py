@@ -55,15 +55,15 @@ class ValidateModel:
         self.ivcmd = (self.view.register(self.onInvalid))
 
     def set_validate(self):
-        self.view.selectElite.configure(validate="all", validatecommand=(self.vcmd, "%P", "%W", str(""r"\d")),
+        self.view.selectElite.configure(validate="all", validatecommand=(self.vcmd, "%P", "%W", r"\d"),
                                         invalidcommand=(self.ivcmd, "%P", "%W"))
-        self.view.selectLvl.configure(validate="all", validatecommand=(self.vcmd, "%P", "%W", str(""r"\d{1,2}")),
+        self.view.selectLvl.configure(validate="all", validatecommand=(self.vcmd, "%P", "%W", r"\d{1,2}"),
                                       invalidcommand=(self.ivcmd, "%P", "%W"))
-        self.view.selectSkill1.configure(validate="all", validatecommand=(self.vcmd, "%P", "%W", str(""r"10|\d")),
+        self.view.selectSkill1.configure(validate="all", validatecommand=(self.vcmd, "%P", "%W", r"10|\d"),
                                          invalidcommand=(self.ivcmd, "%P", "%W"))
-        self.view.selectSkill2.configure(validate="all", validatecommand=(self.vcmd, "%P", "%W", str(""r"10|\d")),
+        self.view.selectSkill2.configure(validate="all", validatecommand=(self.vcmd, "%P", "%W", r"10|\d"),
                                          invalidcommand=(self.ivcmd, "%P", "%W"))
-        self.view.selectSkill3.configure(validate="all", validatecommand=(self.vcmd, "%P", "%W", str(""r"10|\d")),
+        self.view.selectSkill3.configure(validate="all", validatecommand=(self.vcmd, "%P", "%W", r"10|\d"),
                                          invalidcommand=(self.ivcmd, "%P", "%W"))
 
     def validate(self, P, W, pattern):

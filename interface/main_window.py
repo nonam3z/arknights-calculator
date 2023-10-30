@@ -42,7 +42,7 @@ class View(tk.Frame):
         self.planner = PlannerFrame(self)
         self.tabs.add(self.planner.view, text="Planner")
         self.inventory = InventoryFrame(self)
-        self.tabs.add(self.inventory, text="Inventory Depot")
+        self.tabs.add(self.inventory.view, text="Inventory Depot")
         self.calculator = OverallPathFrame(self)
         self.tabs.add(self.calculator, text="Path Calculator")
         self.farming = FarmingFrame(self)
@@ -109,24 +109,27 @@ class Model:
             data["earList"][ears.name]["name"] = ears.name
             data["earList"][ears.name]["current"] = ears.current
             data["earList"][ears.name]["desired"] = ears.desired
-        for items in InventoryFrame.frames.values():
-            data["inventory"][items.itemId] = {}
-            data["inventory"][items.itemId]["itemId"] = items.itemId
-            if items.itemHave.get():
-                data["inventory"][items.itemId]["have"] = items.itemHave.get()
+        for items in inventory:
+            data["inventory"][items] = {}
+            data["inventory"][items]["itemId"] = items
+            if inventory[items]:
+                data["inventory"][items]["have"] = inventory[items]
+            else:
+                data["inventory"][items]["have"] = 0
         data["stages"].setdefault("checked_list", stages)
-        if os.path.exists("jsons/" + rep + "/savedata.json"):
-            os.remove("jsons/" + rep + "/savedata.json")
-        file = open("jsons/" + rep + "/savedata.json", 'w+')
+        if os.path.exists(f"jsons/{rep}/savedata.json"):
+            os.remove(f"jsons/{rep}/savedata.json")
+        file = open(f"jsons/{rep}/savedata.json", 'w+')
         json.dump(data, file, cls=self.EarEncoder, indent=4)
         file.close()
     pass
 
     def load_data(self):
-        if os.path.exists("jsons/" + DataParser.settings.Settings().repository + "/savedata.json"):
-            size = os.path.getsize("jsons/" + DataParser.settings.Settings().repository + "/savedata.json")
+        repository = DataParser.settings.Settings().repository
+        if os.path.exists(f"jsons/{repository}/savedata.json"):
+            size = os.path.getsize(f"jsons/{repository}/savedata.json")
             if size:
-                savedata = json.load(open("jsons/" + DataParser.settings.Settings().repository + "/savedata.json", encoding='utf-8'))
+                savedata = json.load(open(f"jsons/{repository}/savedata.json", encoding='utf-8'))
                 return savedata
             else:
                 return None
@@ -178,7 +181,7 @@ class Controller:
     def save_data(self):
         try:
             self.model.save_data(self, self.view.planner.model.allEarsList, self.view.rep_choose_var.get(),
-                                 dict(), dict(), dict())
+                                 dict(), self.view.inventory.controller.create_current_stash_list(), dict())
         except ValueError:
             pass
 
@@ -195,7 +198,7 @@ class Controller:
             if savedata["inventory"]:
                 try:
                     for item in savedata["inventory"].values():
-                        self.view.inventory.frames[item["itemId"]].itemHave.set(int(item["have"]))
+                        self.view.inventory.view.frames[item["itemId"]].view.itemHave.set(int(item["have"]))
                 except KeyError:
                     print("KeyError in savedata.json --> inventory.")
             if savedata["stages"]:

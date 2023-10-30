@@ -13,7 +13,7 @@ __all__ = [
     "main_window",
     "overall_path_frame",
     "planner_frame",
-    "planner_stats",
+    "planner_panels",
     "planner_modules",
     "stages_frame"
 ]

@@ -4,84 +4,96 @@
 
 import math
 import tkinter as tk
-from tkinter import *
-
-from PIL import Image, ImageTk
 
 from data_parser.inventory import Inventory
 from . import inventory_panels
 
 
-class InventoryFrame(tk.Frame):
-    frames = {}
-
+class View(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
 
+        self.controller = None
+
+        self.frames = {}
+
         self.grid(padx=5, pady=5, sticky="nsew")
-        self.master = master
 
-        self.inv = None
-        self.update_inventory()
+    def create_frames(self, inventory):
+        for item in inventory:
+            self.frames.setdefault(item, inventory_panels.InventoryPanels(self, item))
+
+    def raise_frames(self):
+        for frame in self.frames.values():
+            frame.tkraise()
+
+    def set_controller(self, controller):
+        self.controller = controller
+
+class Model:
+    def __init__(self):
+        pass
 
     @staticmethod
-    def clear_inventory():
-        for frame in InventoryFrame.frames.values():
-            frame.itemHave.set(0)
-        return None
+    def get_inventory():
+        return Inventory().inventory.copy()
 
-    def update_inventory(self):
-        InventoryFrame.frames = {}
-        self.inv = self.parse_inventory()
-        self.load_icons()
+
+class Controller:
+    def __init__(self, model, view):
+        self.model = model
+        self.view = view
+
+    def create_frames(self):
+        self.clear_frames()
+        inventory = self.model.get_inventory()
+        self.view.create_frames(inventory)
         self.update_variables()
-        # self.raise_frames()
+        self.clear_inventory()
 
-    @staticmethod
-    def parse_inventory():  # Парсим инвентарь, рассчитываем размеры для матрицы фреймов для отрисовки инвентаря.
-        inv = Inventory().inventory
-        i = int(inv.__len__())
+    def parse_inventory(self):  # Парсим инвентарь, рассчитываем размеры для матрицы фреймов для отрисовки инвентаря.
+        inventory = self.model.get_inventory()
+        i = int(inventory.__len__())
         j = math.ceil(i / 7)
-        return {'inv': inv, 'i': i, 'j': j}
+        return {'inv': inventory, 'i': i, 'j': j}
 
     def update_variables(self):
         m, n = 0, 0
+        inv = self.parse_inventory()
         for c in range(7):
-            self.columnconfigure(c, weight=1)
-            for r in range(self.inv['j']):
-                self.rowconfigure(r, weight=1)
-        for itemFrame in InventoryFrame.frames.values():
-            if itemFrame.itemId != "5001":
-                itemFrame.grid(row=n, column=m, sticky="nsew")
+            self.view.columnconfigure(c, weight=1)
+            for r in range(inv['j']):
+                self.view.rowconfigure(r, weight=1)
+        for itemFrame in self.view.frames.values():
+            if itemFrame.view.itemId != "5001":
+                itemFrame.view.grid(row=n, column=m, sticky="nsew")
                 m = m + 1
                 if m >= 7:
                     m, n = 0, (n + 1)
 
-    def load_icons(self):
-        for k in self.inv['inv'].values():
-            item = inventory_panels.InvPanel(self)
-            item.itemId = k.itemId
-            item.itemName.configure(text=k.name, justify="right", anchor="e")
-            item.itemHave.insert(0, "0")
-            item.iconId = k.iconId
-            InventoryFrame.frames.setdefault(item.itemId)
-            InventoryFrame.frames[item.itemId] = item
-            try:
-                item.icon = Image.open("items/" + k.iconId + ".png")
-                item.icon.thumbnail((40, 40), Image.ANTIALIAS)
-                item.icon = ImageTk.PhotoImage(item.icon)
-                item.itemIcon.create_image(10, 5, anchor="nw", image=item.icon)
-            except FileNotFoundError:
-                print("File with id " + item.iconId + " not found, skipping...")
-                item.icon = None
-
-    # def raise_frames(self):
-    #     for frame in InventoryFrame.frames.values():
-    #         frame.tkraise()
-
-    @staticmethod
-    def create_item_list():
+    def create_current_stash_list(self):
         data = {}
-        for i in InventoryFrame.frames.values():
-            data.setdefault(i.itemId, int(i.itemHave.get()))
+        for i in self.view.frames.values():
+            data.setdefault(i.view.itemId, int(i.view.itemHave.get()))
         return data
+
+    def clear_frames(self):
+        self.view.frames = {}
+
+    def clear_inventory(self):
+        for frame in self.view.frames.values():
+            frame.view.itemHave.set(0)
+        return None
+
+class InventoryFrame:
+    def __init__(self, master):
+        super().__init__()
+
+        self.master = master
+
+        self.view = View(master=master)
+        self.model = Model()
+        self.controller = Controller(self.model, self.view)
+
+        self.view.set_controller(self.controller)
+        self.controller.create_frames()

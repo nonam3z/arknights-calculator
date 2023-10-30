@@ -26,7 +26,7 @@ class Operator:
 
     def skill_lvl(self, phase):
         phase = int(phase)
-        if self.ear["rarity"] > 1:
+        if self.ear["rarity"] != "TIER_1":
             if phase == 0:
                 return 4
             if phase == 1:
@@ -63,8 +63,12 @@ class OperatorState:
 
     def calc_cost(self):
         max_lvl = []
+        current = [self.current.skill1, self.current.skill2, self.current.skill3]
+        desired = [self.desired.skill1, self.desired.skill2, self.desired.skill3]
+
         for i in range(0, len(self.operator.ear["phases"])):
             max_lvl.append(self.operator.ear["phases"][i]["maxLevel"])
+
         for elite in range(self.current.elite, self.desired.elite + 1):
             if elite == self.current.elite == self.desired.elite:
                 self.calc_needs(self.current.level - 1, self.desired.level - 1, elite)
@@ -74,37 +78,28 @@ class OperatorState:
                 self.calc_needs(0, max_lvl[elite] - 1, elite)
             if self.current.elite < elite == self.desired.elite:
                 self.calc_needs(0, self.desired.level - 1, elite)
+
         for elite in range(self.current.elite, self.desired.elite):
             self.cost["4001"] = self.cost.get("4001", 0) + \
-                                self.data.gameconst["evolveGoldCost"][self.operator.ear["rarity"]][elite]
+                                self.data.gameconst["evolveGoldCost"][(int(self.operator.ear["rarity"][5])-1)][elite]
             for i in self.return_results(elite + 1).items():
                 count = self.cost.get(i[0], 0)
                 self.cost[i[0]] = count + i[1]
-        if self.current.skill1 < self.desired.skill1:
-            if self.desired.skill1 > 7:
-                desired = 6
-            else:
-                desired = self.desired.skill1 - 1
-            for i in range(self.current.skill1 - 1, desired):
+
+        if current[0] < desired[0]:
+            for i in range(current[0] - 1, min(max(desired[0] - 1, 0), 6)):
                 skill_lvl_up_cost = self.operator.ear["allSkillLvlup"][i]["lvlUpCost"]
                 for c in skill_lvl_up_cost:
                     name = Item(c["id"]).itemId
                     self.cost[name] = self.cost.get(name, 0) + c["count"]
-        if self.current.skill1 < self.desired.skill1 <= 10 and 7 < self.desired.skill1:
-            cost1 = self.calculate_skills(0, self.current.skill1 - 7, self.desired.skill1 - 7)
-            for i in cost1.items():
-                count = self.cost.get(i[0], 0)
-                self.cost[i[0]] = count + i[1]
-        if self.current.skill2 < self.desired.skill2 <= 10 and 7 < self.desired.skill2:
-            cost2 = self.calculate_skills(1, self.current.skill2 - 7, self.desired.skill2 - 7)
-            for i in cost2.items():
-                count = self.cost.get(i[0], 0)
-                self.cost[i[0]] = count + i[1]
-        if self.current.skill3 < self.desired.skill3 <= 10 and 7 < self.desired.skill3:
-            cost3 = self.calculate_skills(2, self.current.skill3 - 7, self.desired.skill3 - 7)
-            for i in cost3.items():
-                count = self.cost.get(i[0], 0)
-                self.cost[i[0]] = count + i[1]
+
+        for i in range(2):
+            if current[i] < desired[i] <= 10 and 7 < desired[i]:
+                cost = self.calculate_skills(0, current[i] - 7, desired[i] - 7)
+                for n in cost.items():
+                    count = self.cost.get(n[0], 0)
+                    self.cost[n[0]] = count + n[1]
+
         return None
 
     def calc_needs(self, lvlmin, lvlmax, elite):

@@ -3,6 +3,7 @@ from .settings import Settings
 from .singleton import Singleton
 
 
+# noinspection PyUnresolvedReferences
 class Database(metaclass=Singleton):
     def __init__(self):
         self.rep = Settings().repository

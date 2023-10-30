@@ -9,9 +9,8 @@ from PIL import Image, ImageTk
 
 from data_parser import inventory
 from data_parser import operator as ADP
-from . import inventory_frame
 from . import planner_modules
-from . import planner_stats
+from . import planner_panels
 
 
 class View(tk.Frame):
@@ -39,11 +38,11 @@ class View(tk.Frame):
         self.modules.columnconfigure(0, weight=1)
         self.modules.columnconfigure(1, weight=1)
 
-        self.currentStats = planner_stats.StatsPanel(self.stats)
+        self.currentStats = planner_panels.StatsPanel(self.stats)
         self.currentStatsView = self.currentStats.view
         self.currentStatsView.grid(column=0, row=0, padx=3, sticky="nsew")
 
-        self.desiredStats = planner_stats.StatsPanel(self.stats)
+        self.desiredStats = planner_panels.StatsPanel(self.stats)
         self.desiredStatsView = self.desiredStats.view
         self.desiredStatsView.grid(column=1, row=0, padx=3, sticky="nsew")
 
@@ -240,7 +239,7 @@ class Controller:
             icon = ImageTk.PhotoImage(icon)
             self.results_list[data]["icon"] = icon
             self.results_list[data]["need"] = results[data]["need"]
-            self.results_list[data]["have"] = inventory_frame.InventoryFrame.frames[data].itemHave.get()
+            self.results_list[data]["have"] = self.view.master.inventory.view.frames[data].view.itemHave.get()
         for i in self.view.results.get_children():
             self.view.results.delete(i)
         if results:
@@ -257,20 +256,21 @@ class Controller:
         :param desired: Принимает объект с желаемыми статами ушки.
         :return: Возвращает сокращенную строчку для вывода в табличку с ушками.
         """
+        skills = ["1","2","3","4","5","6","7","M1","M2","M3"]
         results = ""
-        if int(current.elite) < int(desired.elite):
-            results += (str(current.elite) + "e" + str(current.level) + " >>> "
-                        + str(desired.elite) + "e" + str(desired.level) + "; ")
-        if (int(current.elite) == int(desired.elite)) and (
-                int(current.level) < int(desired.level)):
-            results += (str(current.elite) + "e" + str(current.level) + " >>> "
-                        + str(desired.elite) + "e" + str(desired.level) + "; ")
-        if int(current.skill1) < int(desired.skill1):
-            results += ("S1(" + str(current.skill1) + " to " + str(desired.skill1) + "); ")
-        if int(current.skill2) < int(desired.skill2):
-            results += ("S2(" + str(current.skill2) + " to " + str(desired.skill2) + "); ")
-        if int(current.skill3) < int(desired.skill3):
-            results += ("S3(" + str(current.skill3) + " to " + str(desired.skill3) + "); ")
+        if current.elite < desired.elite:
+            results = f"{current.elite}e{current.level} to {desired.elite}e{desired.level};  "
+        else:
+            if current.level < desired.level:
+                results = f"{current.elite}e{current.level} to {desired.elite}e{desired.level};  "
+        if current.skill1 < desired.skill1 and desired.skill1 > 7:
+            results += f"S1({skills[(current.skill1-1)]} to {skills[(desired.skill1-1)]});  "
+        if current.skill2 < desired.skill2 and desired.skill2 > 7:
+            results += f"S2({skills[(current.skill2-1)]} to {skills[(desired.skill2-1)]});  "
+        if current.skill3 < desired.skill3 and desired.skill3 > 7:
+            results += f"S3({skills[(current.skill3-1)]} to {skills[(desired.skill3-1)]});  "
+        if current.skill1 < desired.skill1 <= 7:
+            results += f"SA({skills[(current.skill1-1)]} to {skills[(desired.skill1-1)]});"
         return results
 
     def set_max_lvls(self, event):

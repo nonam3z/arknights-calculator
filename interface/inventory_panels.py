@@ -5,24 +5,25 @@
 import tkinter as tk
 from tkinter import ttk
 
+from PIL import Image, ImageTk
 
-class InvPanel(tk.Frame):
+from data_parser.inventory import Inventory
+
+
+class View(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
+
+        self.controller = None
 
         self.columnconfigure(0, weight=0)
         self.columnconfigure(1, weight=1)
         self.rowconfigure(0, weight=0)
         self.rowconfigure(1, weight=1)
-        # self.rowconfigure(2, weight=1)
 
         self.itemId = ""
         self.iconId = ""
         self.icon = ""
-        # self.thumbnail = ""
-
-        self.vcmdInv = (self.register(self.validateInv), "%P", "%W")
-        self.ivcmd = (self.register(self.onInvalid), "%W", "%P")
 
         self.itemIcon = tk.Canvas(self, width=50, height=50)
         self.itemIcon.grid(row=1, column=0, sticky="nsew")
@@ -30,12 +31,34 @@ class InvPanel(tk.Frame):
         self.itemName = tk.Label(self, width=180)
         self.itemName.grid(row=0, column=0, columnspan=2)
 
-        self.itemHave = ttk.Spinbox(self, from_=0, to=999999999)
+        self.itemHave = ttk.Spinbox(self, from_=0, to=999999999, values=["0"])
         self.itemHave.grid(row=1, column=1)
-        self.itemHave.configure(validate="key", validatecommand=self.vcmdInv, invalidcommand=self.ivcmd)
+
+    def set_controller(self, controller):
+        self.controller = controller
+
+
+class Model:
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def get_inventory_data():
+        return Inventory().inventory.copy()
+
+
+class ValidateModel:
+    def __init__(self, view):
+        self.view = view
+
+        self.vcmd = (self.view.register(self.validateInv))
+        self.ivcmd = (self.view.register(self.onInvalid))
+
+    def set_validate(self):
+        self.view.itemHave.configure(validate="key", validatecommand=self.vcmd, invalidcommand=self.ivcmd)
 
     def validateInv(self, P, W):
-        widget = self.master.nametowidget(W)
+        widget = self.view.nametowidget(W)
         _from = widget["from"]
         _to = widget["to"]
         try:
@@ -49,7 +72,7 @@ class InvPanel(tk.Frame):
         return False
 
     def onInvalid(self, W, P):
-        widget = self.master.nametowidget(W)
+        widget = self.view.nametowidget(W)
         _from = widget["from"]
         _to = widget["to"]
         widget.delete(0, 99)
@@ -64,3 +87,41 @@ class InvPanel(tk.Frame):
         except ValueError:
             widget.insert(0, _from)
 
+
+class Controller:
+    def __init__(self, model, view):
+        self.model = model
+        self.view = view
+
+    def load_data(self, itemId):
+        inventory = self.model.get_inventory_data()
+        for item in inventory.values():
+            if item.itemId == itemId:
+                self.view.itemId = item.itemId
+                self.view.itemName.configure(text=item.name, justify="right", anchor="e")
+                self.view.iconId = item.iconId
+                try:
+                    self.view.icon = Image.open(f"items/{self.view.iconId}.png")
+                    self.view.icon.thumbnail((40, 40), Image.ANTIALIAS)
+                    self.view.icon = ImageTk.PhotoImage(self.view.icon)
+                    self.view.itemIcon.create_image(10, 5, anchor="nw", image=self.view.icon)
+                except FileNotFoundError:
+                    print(f"File with id {self.view.iconId} not found, skipping...")
+                    item.icon = None
+
+
+class InventoryPanels:
+    def __init__(self, master, itemId):
+        super().__init__()
+
+        self.master = master
+
+        self.view = View(master=master)
+        self.model = Model()
+        self.validate = ValidateModel(self.view)
+        self.controller = Controller(self.model, self.view)
+
+        self.view.set_controller(self.controller)
+        self.validate.set_validate()
+
+        self.controller.load_data(itemId)

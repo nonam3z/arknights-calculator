@@ -10,8 +10,10 @@ __all__ = [
     "inventory",
     "item",
     "operator",
+    "planner_logic",
     "results",
     "savedata",
     "settings",
-    "singleton"
+    "singleton",
+    "stages"
 ]

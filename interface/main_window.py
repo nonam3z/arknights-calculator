@@ -52,7 +52,7 @@ class View(tk.Frame):
         self.itemData = ItemDataFrame(self)
         self.tabs.add(self.itemData, text="Item Data")
         self.stages = StagesFrame(self)
-        self.tabs.add(self.stages, text="Stages List")
+        self.tabs.add(self.stages.view, text="Stages List")
 
         self.menu = tk.Menu(self, tearoff=False)
         self.master.config(menu=self.menu)
@@ -181,7 +181,8 @@ class Controller:
     def save_data(self):
         try:
             self.model.save_data(self, self.view.planner.model.allEarsList, self.view.rep_choose_var.get(),
-                                 dict(), self.view.inventory.controller.create_current_stash_list(), dict())
+                                 self.view.stages.controller.get_checked_stages(),
+                                 self.view.inventory.controller.create_current_stash_list(), dict())
         except ValueError:
             pass
 
@@ -203,11 +204,11 @@ class Controller:
                     print("KeyError in savedata.json --> inventory.")
             if savedata["stages"]:
                 try:
-                    self.view.stages.clear_all()
-                    self.view.stages.create_visible_tree(savedata["stages"]["checked_list"])
+                    self.view.stages.controller.clear_all()
+                    self.view.stages.controller.create_stages_tree(checked_list=savedata["stages"]["checked_list"])
                 except KeyError:
-                    self.view.stages.clear_all()
-                    self.view.stages.create_visible_tree({})
+                    self.view.stages.controller.clear_all()
+                    self.view.stages.controller.create_stages_tree()
                     print("KeyError in savedata.json --> stages.")
         except ValueError:
             pass

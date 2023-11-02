@@ -43,8 +43,8 @@ class View(tk.Frame):
         self.tabs.add(self.planner.view, text="Planner")
         self.inventory = InventoryFrame(self)
         self.tabs.add(self.inventory.view, text="Inventory Depot")
-        self.calculator = OverallPathFrame(self)
-        self.tabs.add(self.calculator, text="Path Calculator")
+        self.overallpath = OverallPathFrame(self)
+        self.tabs.add(self.overallpath.view, text="Path Calculator")
         self.farming = FarmingFrame(self)
         self.tabs.add(self.farming.view, text="Farming Calculator")
         self.crafting = CraftingFrame(self)
@@ -156,7 +156,7 @@ class Controller:
         if self.view.rep_choose_var.get() in ["en_US", "ja_JP", "ko_KR"]:
             self.save_data()
             self.update_data()
-            self.view.calculator.clear_all()
+            self.view.overallpath.clear_all()
             self.view.farming.controller.clear_all()
             self.view.crafting.controller.clear_all()
             self.view.itemData.clear_all()
@@ -174,7 +174,7 @@ class Controller:
         self.update_variables()
         self.view.planner.view.selectOperator["values"] = DataParser.operator.return_list_of_ears()
         self.view.inventory.update_inventory()
-        self.view.calculator.model.create_item_list()
+        self.view.overallpath.model.create_item_list()
         self.view.farming.model.create_item_list()
         DataParser.settings.Settings().repository = self.view.rep_choose_var.get()
 

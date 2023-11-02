@@ -246,7 +246,7 @@ class Controller:
             for i in results:
                 self.view.results.insert("", tk.END, image=self.results_list[i]["icon"],
                                          values=(self.results_list[i]["name"], self.results_list[i]["need"], self.results_list[i]["have"]))
-        # self.master.calculator.create_visible_tree(results)
+        # self.master.overallpath.create_visible_tree(results)
 
     @staticmethod
     def create_upgrade_string(current, desired):
@@ -264,13 +264,18 @@ class Controller:
             if current.level < desired.level:
                 results = f"{current.elite}e{current.level} to {desired.elite}e{desired.level};  "
         if current.skill1 < desired.skill1 and desired.skill1 > 7:
-            results += f"S1({skills[(current.skill1-1)]} to {skills[(desired.skill1-1)]});  "
+            if 1 <= current.skill1 < 7 <= desired.skill1 and not current.skill1 == desired.skill1:
+                results += f"SA({current.skill1} to {min([desired.skill1, 7])});  "
+            skill1 = max([current.skill1, 7])
+            results += f"S1({skills[(skill1-1)]} to {skills[(desired.skill1-1)]});  "
         if current.skill2 < desired.skill2 and desired.skill2 > 7:
-            results += f"S2({skills[(current.skill2-1)]} to {skills[(desired.skill2-1)]});  "
+            skill2 = max([current.skill2, 7])
+            results += f"S2({skills[(skill2-1)]} to {skills[(desired.skill2-1)]});  "
         if current.skill3 < desired.skill3 and desired.skill3 > 7:
-            results += f"S3({skills[(current.skill3-1)]} to {skills[(desired.skill3-1)]});  "
+            skill3 = max([current.skill3, 7])
+            results += f"S3({skills[(skill3-1)]} to {skills[(desired.skill3-1)]});  "
         if current.skill1 < desired.skill1 <= 7:
-            results += f"SA({skills[(current.skill1-1)]} to {skills[(desired.skill1-1)]});"
+            results += f"SA({skills[(current.skill1-1)]} to {skills[(desired.skill1-1)]});  "
         return results
 
     def set_max_lvls(self, event):

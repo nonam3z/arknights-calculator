@@ -1,5 +1,6 @@
 from .database import Database
 from .item import Item
+from .planner_logic import PlannerLogic
 
 
 class Operator:
@@ -60,6 +61,7 @@ class OperatorState:
         self.desired = desired
         self.cost = {}
         self.calc_cost()
+        self.results = PlannerLogic(self.create_cost_tree(self.cost))
 
     def calc_cost(self):
         max_lvl = []
@@ -125,6 +127,14 @@ class OperatorState:
             for c in cost:
                 name = Item(c["id"]).itemId
                 results[name] = results.get(name, 0) + c["count"]
+        return results
+
+    @staticmethod
+    def create_cost_tree(cost):
+        results = {}
+        for itemId in cost:
+            item = Item(itemId)
+            results.setdefault(itemId, item)
         return results
 
 

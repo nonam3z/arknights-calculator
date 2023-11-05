@@ -1,5 +1,5 @@
 from .database import Database
-from .item import Item
+from .inventory import Inventory
 from .planner_logic import PlannerLogic
 
 
@@ -54,6 +54,7 @@ class Operator:
 class OperatorState:
     def __init__(self, iid, name, current, desired):
         self.data = Database()
+        self.inventory = Inventory().inventory
         self.iid = iid
         self.name = name
         self.operator = Operator(self.name)
@@ -92,7 +93,7 @@ class OperatorState:
             for i in range(current[0] - 1, min(max(desired[0] - 1, 0), 6)):
                 skill_lvl_up_cost = self.operator.ear["allSkillLvlup"][i]["lvlUpCost"]
                 for c in skill_lvl_up_cost:
-                    name = Item(c["id"]).itemId
+                    name = self.inventory[c["id"]].itemId
                     self.cost[name] = self.cost.get(name, 0) + c["count"]
 
         for i in range(2):
@@ -113,7 +114,7 @@ class OperatorState:
     def return_results(self, elite):
         results = {}
         for item in self.operator.elite_cost(elite):
-            i = Item(item["id"])
+            i = self.inventory[item["id"]]
             results[i.itemId] = item["count"]
         return results
 
@@ -125,15 +126,14 @@ class OperatorState:
         for i in range(current, desired):
             cost = lvl_up_cost[i]["levelUpCost"]
             for c in cost:
-                name = Item(c["id"]).itemId
+                name = self.inventory[c["id"]].itemId
                 results[name] = results.get(name, 0) + c["count"]
         return results
 
-    @staticmethod
-    def create_cost_tree(cost):
+    def create_cost_tree(self, cost):
         results = {}
         for itemId in cost:
-            item = Item(itemId)
+            item = self.inventory[itemId]
             results.setdefault(itemId, item)
         return results
 

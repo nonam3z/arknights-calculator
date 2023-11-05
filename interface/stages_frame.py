@@ -48,10 +48,10 @@ class Controller:
         self.model = model
 
     def select_all(self):
-        for iid in self.view.get_children():
-            self.view.change_state(iid, "checked")
-            for child_iid in self.view.get_children(iid):
-                self.view.change_state(child_iid, "checked")
+        for iid in self.view.stagesFrame.get_children():
+            self.view.stagesFrame.change_state(iid, "checked")
+            for child_iid in self.view.stagesFrame.get_children(iid):
+                self.view.stagesFrame.change_state(child_iid, "checked")
 
     def get_checked_stages(self):
         allowed_stages_iid = list(self.view.stagesFrame.tag_has("checked"))
@@ -78,7 +78,7 @@ class Controller:
                 if not stage == "name":
                     if zone in ["main_10", "main_11", "main_12"]:
                         stage_iid = self.view.stagesFrame.insert(zone_iid, tk.END, values=(
-                            f"{zones[zone][stage]['code']}  {zones[zone][stage]['diffGroup']}", stage))
+                            f"{zones[zone][stage]['code']}  {(zones[zone][stage]['diffGroup']).capitalize()}", stage))
                         if stage in checked_list:
                             self.view.stagesFrame.change_state(stage_iid, checked_list[stage])
                     else:
@@ -103,3 +103,4 @@ class StagesFrame:
         self.view.set_controller(self.controller)
 
         self.controller.create_stages_tree()
+        self.controller.set_binds()

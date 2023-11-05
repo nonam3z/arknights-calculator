@@ -5,8 +5,6 @@
 import tkinter as tk
 from tkinter import ttk
 
-from PIL import Image, ImageTk
-
 from data_parser import inventory
 from data_parser import operator as ADP
 from . import planner_modules
@@ -233,11 +231,7 @@ class Controller:
             self.results_list[data] = {}
             self.results_list[data]["itemId"] = data
             self.results_list[data]["name"] = item_list[data].name
-            self.results_list[data]["iconId"] = item_list[data].iconId
-            icon = Image.open("items/" + self.results_list[data]["iconId"] + ".png")
-            icon.thumbnail((20, 20), Image.ANTIALIAS)
-            icon = ImageTk.PhotoImage(icon)
-            self.results_list[data]["icon"] = icon
+            self.results_list[data]["icon"] = item_list[data].iconSmall
             self.results_list[data]["need"] = results[data]["need"]
             self.results_list[data]["have"] = self.view.master.inventory.view.frames[data].view.itemHave.get()
         for i in self.view.results.get_children():

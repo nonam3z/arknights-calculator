@@ -5,8 +5,6 @@
 import tkinter as tk
 from tkinter import ttk
 
-from PIL import Image, ImageTk
-
 from data_parser.inventory import Inventory
 
 
@@ -21,9 +19,7 @@ class View(tk.Frame):
         self.rowconfigure(0, weight=0)
         self.rowconfigure(1, weight=1)
 
-        self.itemId = ""
-        self.iconId = ""
-        self.icon = ""
+        self.itemId = None
 
         self.itemIcon = tk.Canvas(self, width=50, height=50)
         self.itemIcon.grid(row=1, column=0, sticky="nsew")
@@ -95,20 +91,11 @@ class Controller:
 
     def load_data(self, itemId):
         inventory = self.model.get_inventory_data()
-        for item in inventory.values():
-            if item.itemId == itemId:
-                self.view.itemId = item.itemId
-                self.view.itemName.configure(text=item.name, justify="right", anchor="e")
-                self.view.iconId = item.iconId
-                try:
-                    self.view.icon = Image.open(f"items/{self.view.iconId}.png")
-                    self.view.icon.thumbnail((40, 40), Image.ANTIALIAS)
-                    self.view.icon = ImageTk.PhotoImage(self.view.icon)
-                    self.view.itemIcon.create_image(10, 5, anchor="nw", image=self.view.icon)
-                except FileNotFoundError:
-                    print(f"File with id {self.view.iconId} not found, skipping...")
-                    item.icon = None
-
+        self.view.itemName.configure(text=inventory[itemId].name, justify="right", anchor="e")
+        try:
+            self.view.itemIcon.create_image(10, 5, anchor="nw", image=inventory[itemId].iconMedium)
+        except FileNotFoundError:
+            print(f"There is no icon {self.view.iconId} in inventory data, skipping...")
 
 class InventoryPanels:
     def __init__(self, master, itemId):
@@ -124,4 +111,5 @@ class InventoryPanels:
         self.view.set_controller(self.controller)
         self.validate.set_validate()
 
+        self.view.itemId = itemId
         self.controller.load_data(itemId)

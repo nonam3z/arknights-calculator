@@ -6,8 +6,6 @@ import tkinter as tk
 from tkinter import *
 from tkinter import ttk
 
-from PIL import Image, ImageTk
-
 from data_parser.inventory import Inventory
 
 
@@ -39,7 +37,7 @@ class ItemDataFrame(tk.Frame):
         self.itemData.column("cost", stretch=True, width=70)
         self.itemData.heading("cost", text="AP Cost", anchor="center")
         self.itemData.column("ccost", stretch=True, width=70)
-        self.itemData.heading("ccost", text="Stage", anchor="center")
+        self.itemData.heading("ccost", text="Crafting Cost", anchor="center")
         self.itemData.column("stage", stretch=True, width=70)
         self.itemData.heading("stage", text="Stage", anchor="center")
         self.itemData.column("flags", stretch=True, width=70)
@@ -53,16 +51,7 @@ class ItemDataFrame(tk.Frame):
         Создает список предметов с иконками для дальнейшей отрисовки таблицы.
         :return: Ничего не возвращает.
         """
-        self.item_list = Inventory().inventory
-        for item in self.item_list.values():
-            try:
-                icon = Image.open("items/" + item.iconId + ".png")
-                icon.thumbnail((20, 20), Image.ANTIALIAS)
-                icon = ImageTk.PhotoImage(icon)
-                item.icon = icon
-            except FileNotFoundError:
-                print("File with id " + item.iconId + " not found, skipping...")
-                item.icon = None
+        self.item_list = Inventory().inventory.copy()
         return None
 
     def create_info(self):

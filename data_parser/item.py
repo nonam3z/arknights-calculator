@@ -6,7 +6,9 @@ class Item:
         self.itemId = itemid
         self.name = name
         self.iconId = iconid
-        self.icon = None
+        self.iconSmall = None
+        self.iconMedium = None
+        self.iconLarge = None
         self.rarity = rarity
         self.itemCraftingId = None
         self.formula = []

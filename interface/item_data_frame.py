@@ -58,7 +58,7 @@ class ItemDataFrame(tk.Frame):
         ignore = ["数据增补仪", "数据增补条", "转质盐组", "转质盐聚块", "烧结核凝晶"]
         for item in self.item_list.values():
             if item.name not in ignore:
-                self.itemData.insert("", tk.END, image=item.icon,
+                self.itemData.insert("", tk.END, image=item.iconSmall,
                                      values=(item.name, item.bestAp, item.craftingAp, item.bestStage, item.flags))
             else:
                 self.itemData.insert("", tk.END,

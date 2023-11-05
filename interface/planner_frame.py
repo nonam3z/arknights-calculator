@@ -5,8 +5,8 @@
 import tkinter as tk
 from tkinter import ttk
 
-from data_parser import inventory
 from data_parser import operator as ADP
+from data_parser.inventory import Inventory
 from . import planner_modules
 from . import planner_panels
 
@@ -107,8 +107,9 @@ class Model:
     def get_ears_list(self):
         return ADP.return_list_of_ears()
 
-    def get_item_list(self):
-        return inventory.Inventory().inventory
+    @staticmethod
+    def get_inventory():
+        return Inventory().inventory.copy()
 
     def get_ear(self, name):
         return ADP.Operator(name)
@@ -226,7 +227,7 @@ class Controller:
         :param event: Принимает на вход event.
         """
         results = self.get_results()
-        item_list = self.model.get_item_list()
+        item_list = self.model.get_inventory()
         for data in results:
             self.results_list[data] = {}
             self.results_list[data]["itemId"] = data

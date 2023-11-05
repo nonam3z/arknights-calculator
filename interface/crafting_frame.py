@@ -6,8 +6,6 @@ import tkinter as tk
 from tkinter import *
 from tkinter import ttk
 
-from PIL import Image, ImageTk
-
 from data_parser.inventory import *
 
 
@@ -42,26 +40,11 @@ class View(tk.Frame):
 
 class Model:
     def __init__(self):
+        pass
 
-        self.item_list = {}
-        self.inventory = Inventory().inventory
-
-    def create_item_list(self):
-        """
-        Создает список предметов с иконками для дальнейшей отрисовки таблицы.
-        :return: Ничего не возвращает.
-        """
-        self.item_list = Inventory().inventory
-        for item in self.item_list.values():
-            try:
-                icon = Image.open("items/" + item.iconId + ".png")
-                icon.thumbnail((20, 20), Image.ANTIALIAS)
-                icon = ImageTk.PhotoImage(icon)
-                item.icon = icon
-            except FileNotFoundError:
-                print("File with id " + item.iconId + " not found, skipping...")
-                item.icon = None
-        return None
+    @staticmethod
+    def get_inventory_data():
+        return Inventory().inventory.copy()
 
 
 class Controller:
@@ -84,7 +67,6 @@ class CraftingFrame:
         self.controller = Controller(self.model, self.view)
 
         self.view.set_controller(self.controller)
-        self.model.create_item_list()
 
         #
         # def create_visible_tree(self, results):

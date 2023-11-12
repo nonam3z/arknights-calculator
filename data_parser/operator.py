@@ -56,15 +56,19 @@ class OperatorState:
         self.name = name
         self.current = current
         self.desired = desired
-        self.cost = OperatorCost(iid, name, current, desired).cost
+        self.cost = OperatorCost(iid, name, current, desired).get_cost()
 
 
+# noinspection PyMethodMayBeStatic
 class OperatorCost:
     def __init__(self, iid, name, current, desired):
         self.operator = Operator(name)
         self.inventory = Inventory().inventory
         self.gameconst = Database().gameconst
         self.cost = self.calc_cost(current, desired)
+
+    def get_cost(self):
+        return self.cost
 
     def calc_cost(self, current, desired):
         current_skills = [current.skill1, current.skill2, current.skill3]
@@ -85,7 +89,6 @@ class OperatorCost:
                 else:
                     combined_cost[item] = combined_cost.get(item) + part.get(item)
         return combined_cost
-
 
     def get_maxlvls(self):
         max_lvls = []

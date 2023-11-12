@@ -120,7 +120,7 @@ class Inventory(metaclass=Singleton):
             self.inventory[item].iconSmall, self.inventory[item].iconMedium = icon.copy(), icon.copy()
             self.inventory[item].iconSmall.thumbnail((20, 20), Image.ANTIALIAS)
             self.inventory[item].iconSmall = ImageTk.PhotoImage(self.inventory[item].iconSmall)
-            self.inventory[item].iconMedium.thumbnail((40, 40), Image.ANTIALIAS)
+            self.inventory[item].iconMedium.thumbnail((36, 36), Image.ANTIALIAS)
             self.inventory[item].iconMedium = ImageTk.PhotoImage(self.inventory[item].iconMedium)
         except FileNotFoundError:
             print("File with id " + self.inventory[item].iconId + " not found, skipping...")

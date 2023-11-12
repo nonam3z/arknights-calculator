@@ -117,9 +117,9 @@ class Model:
             else:
                 data["inventory"][items]["have"] = 0
         data["stages"].setdefault("checked_list", stages)
-        if os.path.exists(f"jsons/{rep}/savedata.json"):
-            os.remove(f"jsons/{rep}/savedata.json")
-        file = open(f"jsons/{rep}/savedata.json", 'w+')
+        if os.path.exists(f"jsons/{DataParser.settings.Settings().repository}/savedata.json"):
+            os.remove(f"jsons/{DataParser.settings.Settings().repository}/savedata.json")
+        file = open(f"jsons/{DataParser.settings.Settings().repository}/savedata.json", 'w+')
         json.dump(data, file, cls=self.EarEncoder, indent=4)
         file.close()
     pass
@@ -156,26 +156,27 @@ class Controller:
         if self.view.rep_choose_var.get() in ["en_US", "ja_JP", "ko_KR"]:
             self.save_data()
             self.update_data()
-            self.view.overallpath.clear_all()
-            self.view.farming.controller.clear_all()
-            self.view.crafting.controller.clear_all()
+            # self.view.overallpath.clear_all()
+            # self.view.farming.controller.clear_all()
+            # self.view.crafting.controller.clear_all()
             self.view.itemData.clear_all()
-            self.model.load_data()
+            self.view.itemData.create_item_list()
+            self.load_data()
             self.view.itemData.create_info()
         else:
             self.view.rep_choose_var.set(DataParser.settings.Settings().repository)
 
+
     def update_data(self):
-        self.view.inventory.clear_inventory()
+        self.view.inventory.controller.clear_inventory()
         if os.path.exists("jsons/" + self.view.rep_choose_var.get()):
             DataParser.files_loader.FileRepository(self.view.rep_choose_var.get(), False)
         else:
             DataParser.files_loader.FileRepository(self.view.rep_choose_var.get(), True)
         self.update_variables()
         self.view.planner.view.selectOperator["values"] = DataParser.operator.return_list_of_ears()
-        self.view.inventory.update_inventory()
-        self.view.overallpath.model.create_item_list()
-        self.view.farming.model.create_item_list()
+        self.view.planner.view.selectOperator["completevalues"] = DataParser.operator.return_list_of_ears()
+        self.view.inventory.controller.create_frames()
         DataParser.settings.Settings().repository = self.view.rep_choose_var.get()
 
     def save_data(self):
@@ -221,6 +222,7 @@ class Controller:
         DataParser.database.Database()
         DataParser.inventory.Inventory.clear()
         DataParser.inventory.Inventory()
+        self.view.planner.controller.clear_results_list()
 
     @staticmethod
     def about_message():

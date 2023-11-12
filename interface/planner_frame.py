@@ -5,6 +5,8 @@
 import tkinter as tk
 from tkinter import ttk
 
+from ttkwidgets import autocomplete as AC
+
 from data_parser import operator as ADP
 from data_parser.inventory import Inventory
 from . import planner_modules
@@ -22,7 +24,7 @@ class View(tk.Frame):
 
         self.controller = None
 
-        self.selectOperator = ttk.Combobox(self)
+        self.selectOperator = AC.AutocompleteCombobox(self)
         self.selectOperator.insert(0, "Nearl")
         self.selectOperator.grid(row=0, columnspan=2, padx=3, pady=(3, 10), sticky="ew")
 
@@ -168,11 +170,13 @@ class Controller:
     def set_binds(self):
         self.view.earsList.bind("<<TreeviewSelect>>", self.create_results_list)
         self.view.selectOperator.bind("<<ComboboxSelected>>", self.set_max_lvls)
+        self.view.selectOperator.bind("<FocusOut>", self.set_max_lvls)
         self.view.buttonAdd.configure(command=self.earsList_add)
         self.view.buttonDelete.configure(command=self.earsList_del)
 
     def load_data(self, earList):
         self.view.selectOperator["values"] = self.model.get_ears_list()
+        self.view.selectOperator["completevalues"] = self.model.get_ears_list()
         for ear in earList:
             name = ear["name"]
             iid = ear["iid"]
@@ -221,7 +225,7 @@ class Controller:
     def get_results(self):
         return self.model.calculate(self.view.earsList.selection(), self.view.earsList)
 
-    def create_results_list(self, event):
+    def create_results_list(self, event=None):
         """
         Отображение результатов в фрейме results в виде списка.
         :param event: Принимает на вход event.
@@ -285,6 +289,10 @@ class Controller:
     def del_all_ears(self):
         self.model.allEarsList_clear()
         self.view.earsList.delete(*self.view.earsList.get_children())
+
+    def clear_results_list(self):
+        self.results_list = {}
+        self.view.results.delete(*self.view.results.get_children())
 
 
 class PlannerFrame:

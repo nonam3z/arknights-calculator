@@ -177,7 +177,7 @@ class Controller:
             self.view.selectSkill3.delete(0, 9)
             self.view.selectSkill3.insert(0, sbvalue)
 
-    def on_reset(self, event):
+    def on_reset(self, event=None):
         """
         Сбрасывает поля ввода при изменении уровня элитки ушки.
         :param event: Принимает на вход event.
@@ -212,6 +212,7 @@ class Controller:
     def set_params(self, skills):
         self.clear_spinboxes()
         self.skills_counter(skills)
+        self.on_reset()
 
 
 class StatsPanel:

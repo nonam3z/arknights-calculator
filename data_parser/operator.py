@@ -1,6 +1,5 @@
 from .database import Database
 from .inventory import Inventory
-from .planner_logic import PlannerLogic
 
 
 class Operator:
@@ -53,72 +52,104 @@ class Operator:
 
 class OperatorState:
     def __init__(self, iid, name, current, desired):
-        self.data = Database()
-        self.inventory = Inventory().inventory
         self.iid = iid
         self.name = name
-        self.operator = Operator(self.name)
         self.current = current
         self.desired = desired
-        self.cost = {}
-        self.calc_cost()
-        self.results = PlannerLogic(self.create_cost_tree(self.cost))
+        self.cost = OperatorCost(iid, name, current, desired).cost
 
-    def calc_cost(self):
-        max_lvl = []
-        current = [self.current.skill1, self.current.skill2, self.current.skill3]
-        desired = [self.desired.skill1, self.desired.skill2, self.desired.skill3]
 
+class OperatorCost:
+    def __init__(self, iid, name, current, desired):
+        self.operator = Operator(name)
+        self.inventory = Inventory().inventory
+        self.gameconst = Database().gameconst
+        self.cost = self.calc_cost(current, desired)
+
+    def calc_cost(self, current, desired):
+        current_skills = [current.skill1, current.skill2, current.skill3]
+        desired_skills = [desired.skill1, desired.skill2, desired.skill3]
+        elite_cost = self.get_elite_cost(current.elite, desired.elite, current.level, desired.level, self.get_maxlvls())
+        elite_items = self.get_elite_items(current.elite, desired.elite)
+        skills_lvlup_items = self.get_skills_lvlup_items(current_skills, desired_skills)
+        skills_mastery_items = self.get_skills_mastery_items(current_skills, desired_skills)
+        combined_cost = self.combine_cost([elite_cost, elite_items, skills_lvlup_items, skills_mastery_items])
+        return combined_cost
+
+    def combine_cost(self, cost):
+        combined_cost = {}
+        for part in cost:
+            for item in part:
+                if item not in combined_cost.keys():
+                    combined_cost.setdefault(item, part.get(item))
+                else:
+                    combined_cost[item] = combined_cost.get(item) + part.get(item)
+        return combined_cost
+
+
+    def get_maxlvls(self):
+        max_lvls = []
         for i in range(0, len(self.operator.ear["phases"])):
-            max_lvl.append(self.operator.ear["phases"][i]["maxLevel"])
+            max_lvls.append(self.operator.ear["phases"][i]["maxLevel"])
+        return max_lvls
 
-        for elite in range(self.current.elite, self.desired.elite + 1):
-            if elite == self.current.elite == self.desired.elite:
-                self.calc_needs(self.current.level - 1, self.desired.level - 1, elite)
-            if self.current.elite == elite < self.desired.elite:
-                self.calc_needs(self.current.level - 1, max_lvl[elite] - 1, elite)
-            if self.current.elite < elite < self.desired.elite:
-                self.calc_needs(0, max_lvl[elite] - 1, elite)
-            if self.current.elite < elite == self.desired.elite:
-                self.calc_needs(0, self.desired.level - 1, elite)
+    def get_elite_cost(self, curr_elite, des_elite, curr_level, des_level, max_lvls):
+        elite_cost = {}
+        for elite in range(curr_elite, des_elite + 1):
+            if elite == curr_elite == des_elite:
+                elite_cost = self.calc_money_exp(curr_level - 1, des_level - 1, elite, elite_cost)
+            if curr_elite == elite < des_elite:
+                elite_cost = self.calc_money_exp(curr_level - 1, max_lvls[elite] - 1, elite, elite_cost)
+            if curr_elite < elite < des_elite:
+                elite_cost = self.calc_money_exp(0, max_lvls[elite] - 1, elite, elite_cost)
+            if curr_elite < elite == des_elite:
+                elite_cost = self.calc_money_exp(0, des_level - 1, elite, elite_cost)
+        return elite_cost
 
-        for elite in range(self.current.elite, self.desired.elite):
-            self.cost["4001"] = self.cost.get("4001", 0) + \
-                                self.data.gameconst["evolveGoldCost"][(int(self.operator.ear["rarity"][5])-1)][elite]
-            for i in self.return_results(elite + 1).items():
-                count = self.cost.get(i[0], 0)
-                self.cost[i[0]] = count + i[1]
+    def calc_money_exp(self, lvlmin, lvlmax, elite, cost):
+        for level in range(lvlmin, lvlmax):
+            cost["5001"] = cost.get("5001", 0) + self.gameconst["characterExpMap"][elite][level]
+            cost["4001"] = cost.get("4001", 0) + self.gameconst["characterUpgradeCostMap"][elite][level]
+        return cost
 
+    def get_elite_items(self, curr_elite, des_elite):
+        cost = {}
+        for elite in range(curr_elite, des_elite):
+            cost["4001"] = cost.get("4001", 0) + \
+                           self.gameconst["evolveGoldCost"][(int(self.operator.ear["rarity"][5])-1)][elite]
+            for i in self.return_elite_items(elite + 1).items():
+                count = cost.get(i[0], 0)
+                cost[i[0]] = count + i[1]
+        return cost
+
+    def get_skills_lvlup_items(self, current, desired):
+        cost = {}
         if current[0] < desired[0]:
             for i in range(current[0] - 1, min(max(desired[0] - 1, 0), 6)):
                 skill_lvl_up_cost = self.operator.ear["allSkillLvlup"][i]["lvlUpCost"]
                 for c in skill_lvl_up_cost:
                     name = self.inventory[c["id"]].itemId
-                    self.cost[name] = self.cost.get(name, 0) + c["count"]
+                    cost[name] = cost.get(name, 0) + c["count"]
+        return cost
 
+    def get_skills_mastery_items(self, current, desired):
+        cost = {}
         for i in range(2):
             if current[i] < desired[i] <= 10 and 7 < desired[i]:
-                cost = self.calculate_skills(0, current[i] - 7, desired[i] - 7)
+                cost = self.return_skills_mastery_cost(0, current[i] - 7, desired[i] - 7)
                 for n in cost.items():
-                    count = self.cost.get(n[0], 0)
-                    self.cost[n[0]] = count + n[1]
+                    count = cost.get(n[0], 0)
+                    cost[n[0]] = count + n[1]
+        return cost
 
-        return None
-
-    def calc_needs(self, lvlmin, lvlmax, elite):
-        for level in range(lvlmin, lvlmax):
-            self.cost["5001"] = self.cost.get("5001", 0) + self.data.gameconst["characterExpMap"][elite][level]
-            self.cost["4001"] = self.cost.get("4001", 0) + self.data.gameconst["characterUpgradeCostMap"][elite][level]
-        return None
-
-    def return_results(self, elite):
+    def return_elite_items(self, elite):
         results = {}
         for item in self.operator.elite_cost(elite):
             i = self.inventory[item["id"]]
             results[i.itemId] = item["count"]
         return results
 
-    def calculate_skills(self, num, current, desired):
+    def return_skills_mastery_cost(self, num, current, desired):
         lvl_up_cost = self.operator.ear["skills"][num]["levelUpCostCond"]
         results = {}
         if current < 0:
